@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Timer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="logo">Study Timer</h1>
+    <div class="topbar-actions">
+      <button type="button" id="progressToggle" class="btn btn-secondary" aria-expanded="false">
+        Progress
+      </button>
+      <button type="button" id="themeToggle" class="btn btn-secondary" aria-label="테마 전환">
+        다크모드
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="timer-panel" aria-labelledby="timerHeading">
+      <h2 id="timerHeading" class="sr-only">타이머</h2>
+
+      <div class="subject-row">
+        <label for="subjectSelect">과목</label>
+        <select id="subjectSelect">
+          <option value="수학">수학</option>
+          <option value="영어">영어</option>
+          <option value="국어">국어</option>
+          <option value="과학">과학</option>
+          <option value="코딩">코딩</option>
+          <option value="기타">기타</option>
+        </select>
+        <button type="button" id="addSubjectBtn" class="btn btn-ghost">추가</button>
+      </div>
+
+      <div class="timer-display" id="timerDisplay" aria-live="polite">00:00:00</div>
+      <p class="timer-status" id="timerStatus">대기 중</p>
+
+      <div class="timer-controls">
+        <button type="button" id="startBtn" class="btn btn-primary">시작</button>
+        <button type="button" id="pauseBtn" class="btn btn-secondary" disabled>일시정지</button>
+        <button type="button" id="stopBtn" class="btn btn-danger" disabled>종료</button>
+      </div>
+
+      <div class="session-info">
+        <div>
+          <span class="label">이번 세션</span>
+          <strong id="sessionTime">00:00:00</strong>
+        </div>
+        <div>
+          <span class="label">오늘 누적</span>
+          <strong id="todayTime">00:00:00</strong>
+        </div>
+      </div>
+
+      <section class="recent-sessions" aria-labelledby="recentHeading">
+        <h3 id="recentHeading">최근 기록</h3>
+        <ul id="recentList" class="record-list"></ul>
+      </section>
+    </section>
+
+    <aside id="progressPanel" class="progress-panel" aria-hidden="true">
+      <div class="progress-panel-inner">
+        <div class="progress-header">
+          <h2>Progress</h2>
+          <button type="button" id="progressClose" class="btn btn-ghost" aria-label="Progress 닫기">닫기</button>
+        </div>
+
+        <div class="goal-box">
+          <label for="dailyGoal">일일 목표 (분)</label>
+          <div class="goal-row">
+            <input type="number" id="dailyGoal" min="1" max="1440" value="120" />
+            <button type="button" id="saveGoalBtn" class="btn btn-secondary">저장</button>
+          </div>
+          <div class="progress-meter" aria-label="목표 대비 진행률">
+            <div id="goalBar" class="progress-meter-fill"></div>
+          </div>
+          <p id="goalText" class="muted">0 / 120분 (0%)</p>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <h3>오늘</h3>
+            <p id="statToday" class="stat-value">00:00:00</p>
+          </article>
+          <article class="stat-card">
+            <h3>이번 주</h3>
+            <p id="statWeek" class="stat-value">00:00:00</p>
+          </article>
+        </div>
+
+        <section class="chart-section" aria-labelledby="dailyChartHeading">
+          <h3 id="dailyChartHeading">최근 7일</h3>
+          <div id="dailyChart" class="bar-chart" role="img" aria-label="최근 7일 학습 시간 차트"></div>
+        </section>
+
+        <section class="chart-section" aria-labelledby="subjectChartHeading">
+          <h3 id="subjectChartHeading">과목별 학습 시간</h3>
+          <div id="subjectChart" class="bar-chart subject-chart" role="img" aria-label="과목별 학습 시간 차트"></div>
+        </section>
+
+        <section class="chart-section" aria-labelledby="allRecordsHeading">
+          <h3 id="allRecordsHeading">전체 기록</h3>
+          <ul id="allRecordsList" class="record-list"></ul>
+          <button type="button" id="clearRecordsBtn" class="btn btn-danger btn-block">기록 전체 삭제</button>
+        </section>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
