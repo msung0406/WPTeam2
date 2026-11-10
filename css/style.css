@@ -1,0 +1,143 @@
+/* =========================================================
+   Study Dashboard — shared styles (ALL pages load this, after Bootstrap)
+   THEME LIVES ONLY IN THE TOKEN BLOCKS BELOW.
+   Default = Catppuccin Latte + #BABBF1.
+   Deck colors (navy/orange): <html lang="ko" data-theme="deck">
+   ========================================================= */
+
+/* ---------- 1. Theme tokens ---------- */
+:root {
+  --sd-bg: #e6e9ef;
+  --sd-surface: #eff1f5;
+  --sd-sunk: #dce0e8;
+  --sd-line: #ccd0da;
+  --sd-ink: #4c4f69;
+  --sd-muted: #6c6f85;
+  --sd-accent: #babbf1;            /* fills: buttons, active tab, progress */
+  --sd-accent-ink: #4c4f69;        /* text ON accent fills */
+  --sd-accent-text: #5c5fc4;       /* accent used AS text on light bg */
+  --sd-accent-soft: rgba(186, 187, 241, .35);
+  --sd-nav: #dce0e8;
+  --sd-nav-ink: #5c5f77;
+  --sd-high: #d20f39;
+  --sd-mid: #df8e1d;
+  --sd-low: #40a02b;
+  --sd-font: "IBM Plex Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --sd-radius: 10px;
+}
+:root[data-theme="deck"] {
+  --sd-bg: #f2f4f6;
+  --sd-surface: #ffffff;
+  --sd-sunk: #e9edf0;
+  --sd-line: #dce2e7;
+  --sd-ink: #1d2b36;
+  --sd-muted: #5b6974;
+  --sd-accent: #e8553a;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #c8412a;
+  --sd-accent-soft: #fde6df;
+  --sd-nav: #1d2b36;
+  --sd-nav-ink: #c9d3da;
+  --sd-high: #d2412c;
+  --sd-mid: #c27c14;
+  --sd-low: #2f7d63;
+}
+
+/* ---------- 2. Tokens → Bootstrap variables ---------- */
+:root {
+  --bs-body-bg: var(--sd-bg);
+  --bs-body-color: var(--sd-ink);
+  --bs-body-font-family: var(--sd-font);
+  --bs-border-color: var(--sd-line);
+  --bs-secondary-color: var(--sd-muted);
+  --bs-tertiary-bg: var(--sd-sunk);
+  --bs-emphasis-color: var(--sd-ink);
+  --bs-border-radius: 8px;
+  --bs-border-radius-lg: var(--sd-radius);
+  --bs-link-color: var(--sd-accent-text);
+  --bs-link-hover-color: var(--sd-ink);
+  --bs-focus-ring-color: var(--sd-accent-soft);
+}
+body { font-feature-settings: "tnum"; }
+
+.card { --bs-card-bg: var(--sd-surface); --bs-card-border-color: var(--sd-line); }
+.modal { --bs-modal-bg: var(--sd-surface); --bs-modal-border-color: var(--sd-line); }
+.toast { --bs-toast-bg: var(--sd-surface); --bs-toast-border-color: var(--sd-line); --bs-toast-color: var(--sd-ink); }
+.progress { --bs-progress-bg: var(--sd-sunk); --bs-progress-bar-bg: var(--sd-accent); --bs-progress-height: .4rem; }
+
+.btn-primary {
+  --bs-btn-bg: var(--sd-accent);
+  --bs-btn-border-color: var(--sd-accent);
+  --bs-btn-color: var(--sd-accent-ink);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--sd-accent) 85%, var(--sd-ink));
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-hover-color: var(--sd-accent-ink);
+  --bs-btn-active-bg: color-mix(in srgb, var(--sd-accent) 75%, var(--sd-ink));
+  --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  --bs-btn-active-color: var(--sd-accent-ink);
+  --bs-btn-disabled-bg: var(--sd-accent);
+  --bs-btn-disabled-border-color: var(--sd-accent);
+  --bs-btn-disabled-color: var(--sd-accent-ink);
+  font-weight: 600;
+}
+.btn-outline-secondary {
+  --bs-btn-color: var(--sd-muted);
+  --bs-btn-border-color: var(--sd-line);
+  --bs-btn-hover-bg: var(--sd-sunk);
+  --bs-btn-hover-color: var(--sd-ink);
+  --bs-btn-hover-border-color: var(--sd-line);
+  --bs-btn-active-bg: var(--sd-surface);
+  --bs-btn-active-color: var(--sd-ink);
+  --bs-btn-active-border-color: var(--sd-ink);
+}
+.btn-link { --bs-btn-color: var(--sd-muted); --bs-btn-hover-color: var(--sd-ink); text-decoration: none; }
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--sd-accent-text);
+  box-shadow: 0 0 0 .2rem var(--sd-accent-soft);
+}
+.form-check-input:checked { background-color: var(--sd-accent-text); border-color: var(--sd-accent-text); }
+.form-check-input:focus { border-color: var(--sd-accent-text); box-shadow: 0 0 0 .2rem var(--sd-accent-soft); }
+
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--sd-surface);
+  --bs-nav-pills-link-active-color: var(--sd-ink);
+  --bs-nav-link-color: var(--sd-muted);
+  --bs-nav-link-hover-color: var(--sd-ink);
+}
+
+/* ---------- 3. Common header / navigation (same markup on every page) ---------- */
+.sd-navbar { background: var(--sd-nav); }
+.sd-navbar .navbar-brand { color: var(--sd-ink); font-weight: 700; display: flex; align-items: center; gap: .6rem; }
+:root[data-theme="deck"] .sd-navbar .navbar-brand { color: #fff; }
+.sd-brand-mark {
+  display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  background: var(--sd-accent); color: var(--sd-accent-ink); font-size: .85rem;
+}
+.sd-navbar .nav-link { color: var(--sd-nav-ink); border-radius: 8px; padding: .4rem .75rem; font-size: .92rem; }
+.sd-navbar .nav-link:hover { color: var(--sd-ink); }
+:root[data-theme="deck"] .sd-navbar .nav-link:hover { color: #fff; }
+.sd-navbar .nav-link.active { background: var(--sd-accent); color: var(--sd-accent-ink); font-weight: 600; }
+.sd-navbar .navbar-toggler { border-color: var(--sd-line); }
+.sd-navbar .navbar-toggler-icon {
+  background-image: none;
+  background-color: var(--sd-nav-ink);
+  -webkit-mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='black' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='black' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") center / contain no-repeat;
+}
+
+/* ---------- 4. Shared bits other pages can reuse ---------- */
+.sd-page-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+.sd-eyebrow { font-size: .78rem; font-weight: 600; letter-spacing: .06em; color: var(--sd-accent-text); }
+.sd-stat-label { font-size: .8rem; color: var(--sd-muted); }
+.sd-stat-value { font-size: 1.6rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.sd-stat-value small { font-size: .85rem; font-weight: 400; color: var(--sd-muted); margin-left: .25rem; }
+
+/* priority colors — used by Todo, Calendar, Dashboard */
+.sd-pri { font-weight: 600; }
+.sd-pri-high { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.sd-pri-mid  { color: var(--sd-mid);  background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.sd-pri-low  { color: var(--sd-low);  background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
+.sd-subj { color: var(--sd-muted); background: var(--sd-sunk); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

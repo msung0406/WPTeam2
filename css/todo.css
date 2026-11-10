@@ -1,0 +1,157 @@
+/* =========================================================
+   Todo · Planner — page styles (todo.html only)   담당 김주환
+   Colors come from css/style.css tokens only.
+   ========================================================= */
+
+.sd-stat-late .sd-stat-value { color: var(--sd-high); }
+
+/* ---------- form ---------- */
+.sd-form-card { position: sticky; top: 1rem; }
+.sd-editing-badge { font-size: .7rem; color: var(--sd-accent-text); background: var(--sd-accent-soft); }
+.sd-hint { color: var(--sd-muted); font-weight: 400; }
+.sd-pri-btn, .sd-size-btn { font-size: .82rem; padding-inline: .25rem; }
+.btn-check:checked + .sd-pri-btn.sd-pri-high { color: var(--sd-high); border-color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.btn-check:checked + .sd-pri-btn.sd-pri-mid  { color: var(--sd-mid);  border-color: var(--sd-mid);  background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.btn-check:checked + .sd-pri-btn.sd-pri-low  { color: var(--sd-low);  border-color: var(--sd-low);  background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
+.btn-check:checked + .sd-size-btn { background: var(--sd-accent); border-color: var(--sd-accent-text); color: var(--sd-accent-ink); font-weight: 600; }
+.btn-check:not(:checked) + .sd-pri-btn, .btn-check:not(:checked) + .sd-size-btn { background: var(--sd-surface); }
+.sd-size-hint { font-size: .8rem; color: var(--sd-muted); display: grid; gap: .15rem; }
+.sd-hint-rule { color: var(--sd-ink); font-weight: 500; }
+.sd-hint-dates { font-variant-numeric: tabular-nums; }
+.sd-hint-factor, .sd-hint-after { color: var(--sd-accent-text); font-weight: 500; }
+.sd-hint-early { color: var(--sd-muted); }
+.sd-collapse-btn { color: var(--sd-ink); text-decoration: none; }
+.sd-chip { background: var(--sd-sunk); color: var(--sd-ink); border: 0; font-size: .78rem; padding: .15rem .55rem; border-radius: 99px; }
+.sd-chip span { color: var(--sd-muted); margin-left: .15rem; }
+
+.sd-tune-toggle { font-size: .8rem; color: var(--sd-accent-text); text-decoration: none; }
+.sd-tune { border-top: 1px dashed var(--sd-line); margin-top: .35rem; }
+.sd-tune .form-control::placeholder { color: var(--sd-muted); opacity: .7; }
+.sd-custom { background: var(--sd-sunk); color: var(--sd-accent-text); }
+
+/* weekly availability picker */
+.sd-weekpick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; }
+.sd-avail {
+  display: grid; gap: .1rem; justify-items: center; padding: .35rem 0; border-radius: 8px; font-size: .72rem; line-height: 1.2;
+  border: 1px solid var(--sd-line); background: var(--sd-surface); color: var(--sd-ink);
+}
+.sd-avail b { font-size: .8rem; }
+.sd-avail-off { background: var(--sd-sunk); color: var(--sd-muted); border-style: dashed; }
+.sd-avail-long { background: var(--sd-accent); border-color: var(--sd-accent-text); color: var(--sd-accent-ink); font-weight: 600; }
+.sd-avail:focus-visible { outline: 2px solid var(--sd-accent-text); outline-offset: 1px; }
+
+/* ---------- today's plan ---------- */
+.sd-today-card { border-color: var(--sd-accent-text); box-shadow: inset 0 3px 0 var(--sd-accent); }
+.sd-plan { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.sd-plan-item {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; gap: .6rem; align-items: center;
+  padding: .55rem .7rem; border-radius: 8px; background: var(--sd-bg);
+}
+.sd-plan-item .form-check-input { width: 1.2rem; height: 1.2rem; margin: 0; cursor: pointer; }
+.sd-plan-title { font-weight: 500; overflow-wrap: anywhere; cursor: pointer; }
+.sd-plan-item.is-done { opacity: .6; }
+.sd-plan-item.is-done .sd-plan-title { text-decoration: line-through; }
+.sd-plan-empty { color: var(--sd-muted); font-size: .9rem; }
+.sd-done-btn { font-size: .75rem; padding: .1rem .5rem; }
+
+.sd-block { font-size: .72rem; font-weight: 600; background: var(--sd-sunk); color: var(--sd-ink); }
+.sd-block-day { background: var(--sd-accent); color: var(--sd-accent-ink); }
+.sd-reason { font-size: .7rem; font-weight: 600; }
+.sd-reason-overdue { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.sd-reason-due { color: var(--sd-mid); background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.sd-reason-catchup, .sd-reason-fallback { color: var(--sd-accent-text); background: var(--sd-accent-soft); }
+.sd-reason-early { color: var(--sd-low); background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
+.sd-mini.is-early { opacity: .75; border: 1px dashed var(--sd-line); }
+
+/* ---------- toolbar ---------- */
+.sd-view-tabs { background: var(--sd-sunk); border-radius: 9px; padding: 3px; }
+.sd-view-tabs .nav-link { padding: .3rem .9rem; font-weight: 500; }
+.sd-toolbar .form-select { width: auto; }
+
+/* ---------- task list ---------- */
+.sd-group + .sd-group { margin-top: 1.25rem; }
+.sd-group-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: .5rem; font-size: .9rem; font-weight: 600; margin-bottom: .5rem; }
+.sd-group-head .sd-rel { font-size: .8rem; font-weight: 500; color: var(--sd-muted); }
+.sd-group-head .sd-rel.is-today { color: var(--sd-accent-text); }
+.sd-group-head .sd-rel.is-late { color: var(--sd-high); }
+
+.sd-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.sd-task {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .85rem; align-items: center;
+  background: var(--sd-surface); border: 1px solid var(--sd-line); border-left: 3px solid var(--sd-line);
+  border-radius: var(--sd-radius); padding: .75rem .9rem;
+}
+.sd-task.sd-p-high { border-left-color: var(--sd-high); }
+.sd-task.sd-p-mid  { border-left-color: var(--sd-mid); }
+.sd-task.sd-p-low  { border-left-color: var(--sd-low); }
+.sd-task.is-editing { outline: 2px solid var(--sd-accent-text); outline-offset: -1px; }
+.sd-task .form-check-input { width: 1.25rem; height: 1.25rem; margin: 0; cursor: pointer; }
+.sd-task-title { font-weight: 500; overflow-wrap: anywhere; display: block; }
+.sd-task.is-done { opacity: .6; }
+.sd-task.is-done .sd-task-title { text-decoration: line-through; color: var(--sd-muted); }
+.sd-task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .25rem; font-size: .8rem; color: var(--sd-muted); }
+.sd-task-meta .badge { font-size: .72rem; }
+.sd-type { background: var(--sd-sunk); color: var(--sd-ink); }
+.sd-type-exam { background: color-mix(in srgb, var(--sd-high) 13%, transparent); color: var(--sd-high); }
+.sd-type-project { background: var(--sd-accent-soft); color: var(--sd-accent-text); }
+.sd-source { background: var(--sd-accent-soft); color: var(--sd-accent-text); }
+.sd-orphan { background: color-mix(in srgb, var(--sd-mid) 16%, transparent); color: var(--sd-mid); }
+.sd-size { display: inline-flex; gap: 2px; }
+.sd-size i { width: 6px; height: 6px; border-radius: 50%; background: var(--sd-line); }
+.sd-size i.on { background: var(--sd-accent-text); }
+.sd-when.is-late { color: var(--sd-high); font-weight: 600; }
+.sd-task-actions { display: flex; gap: .1rem; }
+.sd-task-actions .btn { font-size: .82rem; }
+
+.sd-empty { border: 1px dashed var(--sd-line); border-radius: var(--sd-radius); padding: 2.5rem 1rem; text-align: center; color: var(--sd-muted); }
+
+/* ---------- weekly plan ---------- */
+.sd-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .5rem; }
+.sd-day {
+  display: flex; flex-direction: column; gap: .35rem; min-width: 0; min-height: 11rem;
+  background: var(--sd-surface); border: 1px solid var(--sd-line); border-radius: var(--sd-radius); padding: .6rem .5rem;
+}
+.sd-day.is-today { border-color: var(--sd-accent-text); box-shadow: inset 0 3px 0 var(--sd-accent); }
+.sd-day.is-rest { background: var(--sd-sunk); }
+.sd-day-head { display: flex; justify-content: space-between; font-size: .8rem; color: var(--sd-muted); }
+.sd-day-head b { color: var(--sd-ink); }
+.sd-day.is-today .sd-day-head b { color: var(--sd-accent-text); }
+.sd-day-tag { font-size: .7rem; color: var(--sd-muted); background: var(--sd-sunk); border-radius: 4px; padding: .05rem .35rem; overflow-wrap: anywhere; }
+.sd-mini {
+  display: grid; gap: .1rem; width: 100%; text-align: left; font-size: .76rem; line-height: 1.3;
+  background: var(--sd-sunk); border: 0; border-radius: 6px; padding: .35rem .45rem; color: var(--sd-ink);
+}
+.sd-mini:hover { background: var(--sd-line); }
+.sd-mini.sd-block-day { background: var(--sd-accent); color: var(--sd-accent-ink); }
+.sd-mini.is-done { opacity: .55; }
+.sd-mini.is-done .sd-mini-title { text-decoration: line-through; }
+.sd-mini-title { overflow-wrap: anywhere; font-weight: 500; }
+.sd-mini-block { font-size: .68rem; opacity: .8; }
+.sd-due { font-size: .7rem; color: var(--sd-high); font-weight: 600; overflow-wrap: anywhere; border-top: 1px dashed var(--sd-line); padding-top: .25rem; }
+.sd-day-empty { font-size: .72rem; color: var(--sd-muted); }
+.sd-day-total { margin-top: auto; font-size: .7rem; color: var(--sd-muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- 쉬는 날 ---------- */
+.sd-break-card .btn-outline-secondary.active { background: var(--sd-accent); border-color: var(--sd-accent-text); color: var(--sd-accent-ink); }
+.sd-break-error { color: var(--sd-high); }
+.sd-break-list { list-style: none; padding: 0; display: grid; gap: .35rem; }
+.sd-break-item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .1rem .5rem; align-items: center;
+  background: var(--sd-bg); border-radius: 8px; padding: .45rem .6rem; font-size: .85rem;
+}
+.sd-break-when { font-weight: 500; font-variant-numeric: tabular-nums; }
+.sd-break-note { grid-column: 1; font-size: .78rem; color: var(--sd-muted); overflow-wrap: anywhere; }
+.sd-break-del { grid-column: 2; grid-row: 1 / span 2; font-size: .78rem; color: var(--sd-high); text-decoration: none; padding: 0; }
+.sd-break-empty { font-size: .82rem; color: var(--sd-muted); }
+.sd-break-today {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; margin-bottom: .6rem;
+  background: var(--sd-accent-soft); color: var(--sd-ink); border-radius: 8px; padding: .55rem .75rem; font-size: .88rem;
+}
+.sd-break-today .btn-link { color: var(--sd-accent-text); font-size: .85rem; text-decoration: none; }
+.sd-day.is-break { background: var(--sd-accent-soft); border-style: dashed; }
+.sd-break-toggle {
+  align-self: flex-start; border: 1px dashed var(--sd-line); background: transparent; color: var(--sd-muted);
+  font-size: .68rem; border-radius: 99px; padding: .05rem .5rem;
+}
+.sd-break-toggle:hover { color: var(--sd-ink); border-color: var(--sd-muted); }
+.sd-break-toggle.on { border-style: solid; border-color: var(--sd-accent-text); color: var(--sd-accent-text); font-weight: 600; }
