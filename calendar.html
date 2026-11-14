@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>Calendar | Study Planner</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/storage.js" defer></script>
+  <script src="js/calendar.js" defer></script>
+</head>
+<body>
+  <div class="planner-app">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="calendar.html" aria-label="Study Planner 홈">
+          <span class="brand__mark" aria-hidden="true">✦</span>
+          <span>study<span class="brand__light">space.</span></span>
+        </a>
+        <nav class="site-nav" aria-label="주요 메뉴">
+          <a class="site-nav__link site-nav__link--active" href="calendar.html" aria-current="page">Calendar</a>
+          <a class="site-nav__link" href="dday.html">D-Day</a>
+        </nav>
+        <span class="site-header__tag">MY STUDY PLANNER</span>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">YOUR DAILY ORGANIZER</span>
+          <h1>Calendar<span class="heading-dot">.</span></h1>
+          <p>소중한 공부 일정을 한눈에 확인하고 관리해 보세요.</p>
+        </div>
+        <a class="button button--light page-heading__link" href="dday.html">D-Day 관리 <span aria-hidden="true">↗</span></a>
+      </div>
+
+      <div class="calendar-layout">
+        <section class="panel calendar-panel" aria-labelledby="month-title">
+          <div class="panel-header calendar-toolbar">
+            <div>
+              <span class="section-label">MONTHLY OVERVIEW</span>
+              <h2 id="month-title">달력</h2>
+              <p class="muted-text" id="month-summary"></p>
+            </div>
+            <div class="calendar-controls">
+              <button id="today-button" class="button button--light button--small" type="button">오늘</button>
+              <button id="previous-month" class="icon-button icon-button--outline" type="button" aria-label="이전 달">‹</button>
+              <button id="next-month" class="icon-button icon-button--outline" type="button" aria-label="다음 달">›</button>
+            </div>
+          </div>
+          <div class="weekday-row" aria-hidden="true">
+            <span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span>
+          </div>
+          <div id="calendar-grid" class="calendar-grid" aria-label="날짜 선택 달력"></div>
+          <div class="calendar-legend">
+            <span><i class="legend-dot legend-dot--event"></i>일정</span>
+            <span><i class="legend-dot legend-dot--dday"></i>D-Day</span>
+            <span class="calendar-legend__hint">날짜를 클릭해 일정을 확인하세요</span>
+          </div>
+        </section>
+
+        <aside class="sidebar-stack">
+          <section class="panel day-panel" aria-labelledby="selected-date-title">
+            <div class="panel-header panel-header--compact">
+              <div>
+                <span class="section-label">SELECTED DAY</span>
+                <h2 id="selected-date-title">선택한 날짜</h2>
+              </div>
+              <span id="selected-date-count" class="count-pill">0개</span>
+            </div>
+            <ul id="selected-schedule" class="schedule-list"></ul>
+          </section>
+
+          <section class="panel form-panel" aria-labelledby="add-event-title">
+            <div class="panel-header panel-header--compact">
+              <div>
+                <span class="section-label">NEW SCHEDULE</span>
+                <h2 id="add-event-title">일정 추가</h2>
+              </div>
+              <span class="form-panel__plus" aria-hidden="true">+</span>
+            </div>
+            <form id="event-form" class="entry-form">
+              <label for="event-title">일정 이름</label>
+              <input id="event-title" name="title" type="text" maxlength="80" placeholder="예: 자료구조 과제 제출" required autocomplete="off">
+              <label for="event-date">날짜</label>
+              <input id="event-date" name="date" type="date" required>
+              <button class="button button--primary button--full" type="submit">+ 일정 추가하기</button>
+              <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+            </form>
+          </section>
+        </aside>
+      </div>
+      <footer class="site-footer">Study smarter, one day at a time. <span>© Study Space</span></footer>
+    </main>
+  </div>
+</body>
+</html>

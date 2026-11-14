@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>D-Day | Study Planner</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/storage.js" defer></script>
+  <script src="js/dday.js" defer></script>
+</head>
+<body>
+  <div class="planner-app">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="calendar.html" aria-label="Study Planner 홈">
+          <span class="brand__mark" aria-hidden="true">✦</span>
+          <span>study<span class="brand__light">space.</span></span>
+        </a>
+        <nav class="site-nav" aria-label="주요 메뉴">
+          <a class="site-nav__link" href="calendar.html">Calendar</a>
+          <a class="site-nav__link site-nav__link--active" href="dday.html" aria-current="page">D-Day</a>
+        </nav>
+        <span class="site-header__tag">MY STUDY PLANNER</span>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">MAKE EVERY DAY COUNT</span>
+          <h1>D-Day<span class="heading-dot">.</span></h1>
+          <p>중요한 시험과 마감일을 등록하고 남은 날짜를 확인하세요.</p>
+        </div>
+        <a class="button button--light page-heading__link" href="calendar.html">달력 보기 <span aria-hidden="true">↗</span></a>
+      </div>
+
+      <section class="dday-hero" aria-label="가장 가까운 D-Day">
+        <div>
+          <span class="dday-hero__eyebrow">NEXT IMPORTANT DATE</span>
+          <h2 id="nearest-title">등록된 예정 일정이 없어요</h2>
+          <p id="today-date"></p>
+        </div>
+        <div id="nearest-count" class="dday-hero__count">—</div>
+        <span class="dday-hero__shape" aria-hidden="true">✳</span>
+      </section>
+
+      <div class="dday-summary">
+        <div class="stat-card"><span>전체 D-Day</span><strong id="total-count">0개</strong></div>
+        <div class="stat-card"><span>다가오는 일정</span><strong id="upcoming-count">0개</strong></div>
+        <div class="stat-card"><span>지난 일정</span><strong id="past-count">0개</strong></div>
+      </div>
+
+      <section class="panel dday-add-panel" aria-labelledby="dday-add-title">
+        <div>
+          <span class="section-label">ADD A NEW MILESTONE</span>
+          <h2 id="dday-add-title">새 D-Day 등록</h2>
+          <p class="muted-text">시험일, 과제 제출일 등 잊지 말아야 할 날짜를 추가해 보세요.</p>
+        </div>
+        <form id="dday-form" class="dday-entry-form">
+          <div class="form-field">
+            <label for="dday-title">이름</label>
+            <input id="dday-title" name="title" type="text" maxlength="80" placeholder="예: 기말고사" required autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="dday-date">목표 날짜</label>
+            <input id="dday-date" name="date" type="date" required>
+          </div>
+          <button class="button button--primary" type="submit">+ D-Day 추가</button>
+        </form>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="dday-section" aria-labelledby="upcoming-heading">
+        <div class="list-heading">
+          <div><span class="section-label">LOOKING AHEAD</span><h2 id="upcoming-heading">다가오는 D-Day</h2></div>
+          <span class="list-heading__deco">✳</span>
+        </div>
+        <div id="upcoming-list" class="dday-card-grid"></div>
+      </section>
+
+      <section class="dday-section dday-section--past" aria-labelledby="past-heading">
+        <div class="list-heading">
+          <div><span class="section-label">ALREADY ACHIEVED</span><h2 id="past-heading">지난 D-Day</h2></div>
+        </div>
+        <div id="past-list" class="dday-card-grid"></div>
+      </section>
+      <footer class="site-footer">Study smarter, one day at a time. <span>© Study Space</span></footer>
+    </main>
+  </div>
+</body>
+</html>
