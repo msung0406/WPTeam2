@@ -1,116 +1,136 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Study Timer</title>
-  <link rel="stylesheet" href="css/timer.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timer | Study Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/timer.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
-  <header class="topbar">
-    <h1 class="logo">Study Timer</h1>
-    <div class="topbar-actions">
-      <button type="button" id="progressToggle" class="btn btn-secondary" aria-expanded="false">
-        Progress
+
+  <!-- ===== 공통 Header / Navigation (모든 페이지 동일, active만 변경) ===== -->
+  <nav class="navbar navbar-expand-lg sd-navbar">
+    <div class="container-xl">
+      <a class="navbar-brand" href="index.html"><span class="sd-brand-mark">2</span>Study Dashboard</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sdNav"
+              aria-controls="sdNav" aria-expanded="false" aria-label="메뉴 열기">
+        <span class="navbar-toggler-icon"></span>
       </button>
-      <button type="button" id="themeToggle" class="btn btn-secondary" aria-label="테마 전환">
-        다크모드
-      </button>
+      <div class="collapse navbar-collapse" id="sdNav">
+        <ul class="navbar-nav ms-lg-3 gap-lg-1">
+          <li class="nav-item"><a class="nav-link" href="index.html">Main</a></li>
+          <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="todo.html">Todo · Planner</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="timer.html">Timer</a></li>
+          <li class="nav-item"><a class="nav-link" href="calendar.html">Calendar</a></li>
+          <li class="nav-item"><a class="nav-link" href="progress.html">Progress</a></li>
+        </ul>
+      </div>
     </div>
-  </header>
-
-  <main class="layout">
-    <section class="timer-panel" aria-labelledby="timerHeading">
-      <h2 id="timerHeading" class="sr-only">타이머</h2>
-
-      <div class="subject-row">
-        <label for="subjectSelect">과목</label>
-        <select id="subjectSelect">
-          <option value="수학">수학</option>
-          <option value="영어">영어</option>
-          <option value="국어">국어</option>
-          <option value="과학">과학</option>
-          <option value="코딩">코딩</option>
-          <option value="기타">기타</option>
-        </select>
-        <button type="button" id="addSubjectBtn" class="btn btn-ghost">추가</button>
+  </nav>
+  <main class="container-xl py-4">
+    <header class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+      <div>
+        <div class="sd-eyebrow">공부 시간 기록</div>
+        <h1 class="sd-page-title">Timer</h1>
       </div>
+      <p class="text-secondary small mb-0" id="todayLabel"></p>
+    </header>
 
-      <div class="timer-display" id="timerDisplay" aria-live="polite">00:00:00</div>
-      <p class="timer-status" id="timerStatus">대기 중</p>
+    <div class="row g-4">
+      <!-- 타이머 -->
+      <section class="col-lg-7" aria-labelledby="timerTitle">
+        <div class="card h-100"><div class="card-body p-3 p-sm-4">
+          <h2 class="visually-hidden" id="timerTitle">타이머</h2>
 
-      <div class="timer-controls">
-        <button type="button" id="startBtn" class="btn btn-primary">시작</button>
-        <button type="button" id="pauseBtn" class="btn btn-secondary" disabled>일시정지</button>
-        <button type="button" id="stopBtn" class="btn btn-danger" disabled>종료</button>
-      </div>
+          <div class="btn-group sd-mode-tabs mb-3" role="group" aria-label="타이머 종류">
+            <button type="button" class="btn btn-outline-secondary" data-mode="stopwatch">스톱워치</button>
+            <button type="button" class="btn btn-outline-secondary" data-mode="pomodoro">뽀모도로</button>
+          </div>
 
-      <div class="session-info">
-        <div>
-          <span class="label">이번 세션</span>
-          <strong id="sessionTime">00:00:00</strong>
-        </div>
-        <div>
-          <span class="label">오늘 누적</span>
-          <strong id="todayTime">00:00:00</strong>
-        </div>
-      </div>
+          <div class="row g-2 mb-3">
+            <div class="col-sm-5">
+              <label class="form-label small text-secondary mb-1" for="subjectSelect">과목</label>
+              <select class="form-select" id="subjectSelect"></select>
+            </div>
+            <div class="col-sm-7">
+              <label class="form-label small text-secondary mb-1" for="taskSelect">할 일 연결 <span class="fw-normal">(선택)</span></label>
+              <select class="form-select" id="taskSelect"></select>
+            </div>
+          </div>
 
-      <section class="recent-sessions" aria-labelledby="recentHeading">
-        <h3 id="recentHeading">최근 기록</h3>
-        <ul id="recentList" class="record-list"></ul>
+          <div class="btn-group btn-group-sm sd-phase-tabs w-100 mb-2" role="group" aria-label="뽀모도로 단계" id="phaseTabs">
+            <button type="button" class="btn btn-outline-secondary" data-phase="focus">집중</button>
+            <button type="button" class="btn btn-outline-secondary" data-phase="short">짧은 휴식</button>
+            <button type="button" class="btn btn-outline-secondary" data-phase="long">긴 휴식</button>
+          </div>
+
+          <div class="sd-clock-wrap">
+            <div class="sd-clock" id="clock" role="timer" aria-live="off">00:00:00</div>
+            <p class="sd-clock-status" id="clockStatus">대기 중</p>
+            <div class="progress sd-phase-progress" role="progressbar" aria-label="이번 단계 진행" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="phaseBarWrap">
+              <div class="progress-bar" id="phaseBar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="sd-timer-controls">
+            <button type="button" class="btn btn-primary btn-lg" id="startBtn">시작</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" id="stopBtn">종료 · 기록</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" id="resetBtn">리셋</button>
+          </div>
+          <p class="sd-timer-notice" id="notice" role="status" aria-live="polite"></p>
+
+          <fieldset class="sd-minutes mt-3" id="minutesBox">
+            <legend class="small text-secondary mb-2">시간 설정 (분)</legend>
+            <div class="sd-minutes-grid">
+              <label class="sd-minutes-field">
+                <span>집중</span>
+                <input class="form-control" type="number" inputmode="numeric" min="1" max="120" data-phase="focus">
+              </label>
+              <label class="sd-minutes-field">
+                <span>짧은 휴식</span>
+                <input class="form-control" type="number" inputmode="numeric" min="1" max="30" data-phase="short">
+              </label>
+              <label class="sd-minutes-field">
+                <span>긴 휴식</span>
+                <input class="form-control" type="number" inputmode="numeric" min="1" max="60" data-phase="long">
+              </label>
+            </div>
+            <p class="sd-stat-note mb-0">집중이 끝나면 자동으로 기록돼요. 4번째 집중 뒤에는 긴 휴식.</p>
+          </fieldset>
+        </div></div>
       </section>
-    </section>
 
-    <aside id="progressPanel" class="progress-panel" aria-hidden="true">
-      <div class="progress-panel-inner">
-        <div class="progress-header">
-          <h2>Progress</h2>
-          <button type="button" id="progressClose" class="btn btn-ghost" aria-label="Progress 닫기">닫기</button>
-        </div>
+      <!-- 오늘 · 최근 기록 -->
+      <div class="col-lg-5 d-flex flex-column gap-4">
+        <section class="card" aria-labelledby="todayTitle"><div class="card-body">
+          <h2 class="sd-stat-label mb-1" id="todayTitle">오늘 공부 시간</h2>
+          <div class="sd-stat-value" id="todayTotal">0분</div>
+          <div class="sd-stat-note" id="todayNote">아직 기록이 없습니다</div>
+        </div></section>
 
-        <div class="goal-box">
-          <label for="dailyGoal">일일 목표 (분)</label>
-          <div class="goal-row">
-            <input type="number" id="dailyGoal" min="1" max="1440" value="120" />
-            <button type="button" id="saveGoalBtn" class="btn btn-secondary">저장</button>
+        <section class="card flex-grow-1" aria-labelledby="recentTitle"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h2 class="sd-section-title" id="recentTitle">최근 기록</h2>
+            <a class="sd-more" href="progress.html">Progress →</a>
           </div>
-          <div class="progress-meter" aria-label="목표 대비 진행률">
-            <div id="goalBar" class="progress-meter-fill"></div>
-          </div>
-          <p id="goalText" class="muted">0 / 120분 (0%)</p>
-        </div>
-
-        <div class="stats-grid">
-          <article class="stat-card">
-            <h3>오늘</h3>
-            <p id="statToday" class="stat-value">00:00:00</p>
-          </article>
-          <article class="stat-card">
-            <h3>이번 주</h3>
-            <p id="statWeek" class="stat-value">00:00:00</p>
-          </article>
-        </div>
-
-        <section class="chart-section" aria-labelledby="dailyChartHeading">
-          <h3 id="dailyChartHeading">최근 7일</h3>
-          <div id="dailyChart" class="bar-chart" role="img" aria-label="최근 7일 학습 시간 차트"></div>
-        </section>
-
-        <section class="chart-section" aria-labelledby="subjectChartHeading">
-          <h3 id="subjectChartHeading">과목별 학습 시간</h3>
-          <div id="subjectChart" class="bar-chart subject-chart" role="img" aria-label="과목별 학습 시간 차트"></div>
-        </section>
-
-        <section class="chart-section" aria-labelledby="allRecordsHeading">
-          <h3 id="allRecordsHeading">전체 기록</h3>
-          <ul id="allRecordsList" class="record-list"></ul>
-          <button type="button" id="clearRecordsBtn" class="btn btn-danger btn-block">기록 전체 삭제</button>
-        </section>
+          <ul class="sd-log-list" id="recentList"></ul>
+          <p class="sd-empty mb-0 d-none" id="recentEmpty">1분 이상 공부하면 여기에 기록돼요.</p>
+        </div></section>
       </div>
-    </aside>
+    </div>
   </main>
 
-  <script src="js/timer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/stats.js" defer></script>
+  <script src="js/timer.js" defer></script>
 </body>
 </html>

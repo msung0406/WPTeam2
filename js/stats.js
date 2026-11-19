@@ -41,6 +41,35 @@ const Stats = (() => {
     };
   }
 
+  // [{ subject, minutes }] most studied first (pass a filtered list for one week)
+  function minutesBySubject(logs = SD.getStudyLogs()) {
+    const totals = {};
+    logs.forEach((l) => {
+      totals[l.subject] = (totals[l.subject] || 0) + l.minutes;
+    });
+    return Object.entries(totals)
+      .map(([subject, minutes]) => ({ subject, minutes }))
+      .filter((s) => s.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes);
+  }
+
+  // [{ subject, done, total, pct }] subjects with the most tasks first
+  function tasksBySubject(tasks = SD.activeTasks()) {
+    const counts = {};
+    tasks.forEach((t) => {
+      const s = (counts[t.subject] ||= { done: 0, total: 0 });
+      s.total++;
+      if (t.completed) s.done++;
+    });
+    return Object.entries(counts)
+      .map(([subject, s]) => ({
+        subject,
+        ...s,
+        pct: Math.round((s.done / s.total) * 100),
+      }))
+      .sort((a, b) => b.total - a.total);
+  }
+
   // today's planner items with hours planned / done (same rule as the Todo page)
   function todayPlan(today = D.today()) {
     const settings = SD.getSettings();
@@ -96,6 +125,8 @@ const Stats = (() => {
     minutesOn,
     weekMinutes,
     taskCompletion,
+    minutesBySubject,
+    tasksBySubject,
     todayPlan,
     upcomingDdays,
     ddayText,
