@@ -1,11 +1,7 @@
 /* =========================================================
    Main page only. Colors come from var(--sd-*) tokens in style.css.
-   .sd-plan* / .sd-block / .sd-reason mirror todo.css → move to style.css when merging.
+   .sd-plan* / .sd-block / .sd-reason mirror todo.css (item layout differs).
    ========================================================= */
-
-.sd-section-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
-.sd-stat-note { font-size: .78rem; color: var(--sd-muted); margin-top: .35rem; }
-.sd-empty { color: var(--sd-muted); font-size: .9rem; }
 
 /* ---------- today's plan ---------- */
 .sd-plan { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
@@ -27,17 +23,6 @@
 .sd-reason-catchup, .sd-reason-fallback { color: var(--sd-accent-text); background: var(--sd-accent-soft); }
 .sd-reason-early { color: var(--sd-low); background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
 
-/* ---------- D-Day ---------- */
-.sd-dday-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
-.sd-dday-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.sd-dday-name { min-width: 0; font-weight: 500; }
-.sd-dday-date { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
-.sd-dday-badge {
-  flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .9rem;
-  padding: .2rem .6rem; border-radius: 999px; background: var(--sd-accent-soft); color: var(--sd-accent-text);
-}
-.sd-dday-badge.is-today { background: var(--sd-accent); color: var(--sd-accent-ink); }
-
 /* ---------- shortcuts ---------- */
 .sd-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .sd-shortcut {
@@ -52,7 +37,3 @@
   .sd-plan-item { grid-template-columns: auto minmax(0, 1fr); }
   .sd-plan-meta { grid-column: 2; justify-content: flex-start; }
 }
-
-/* "more →" links: Bootstrap link color ignores --bs-link-color, so set it here */
-.sd-more { font-size: .85rem; color: var(--sd-accent-text); text-decoration: none; }
-.sd-more:hover, .sd-more:focus-visible { color: var(--sd-ink); text-decoration: underline; }

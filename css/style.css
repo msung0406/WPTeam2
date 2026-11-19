@@ -1,31 +1,12 @@
 /* =========================================================
    Study Dashboard — shared styles (ALL pages load this, after Bootstrap)
    THEME LIVES ONLY IN THE TOKEN BLOCKS BELOW.
-   Default = Catppuccin Latte + #BABBF1.
-   Deck colors (navy/orange): <html lang="ko" data-theme="deck">
+   Default = 중간보고서 색 (navy/orange).
+   Old pastel theme (Catppuccin Latte): <html lang="ko" data-theme="latte">
    ========================================================= */
 
 /* ---------- 1. Theme tokens ---------- */
 :root {
-  --sd-bg: #e6e9ef;
-  --sd-surface: #eff1f5;
-  --sd-sunk: #dce0e8;
-  --sd-line: #ccd0da;
-  --sd-ink: #4c4f69;
-  --sd-muted: #6c6f85;
-  --sd-accent: #babbf1;            /* fills: buttons, active tab, progress */
-  --sd-accent-ink: #4c4f69;        /* text ON accent fills */
-  --sd-accent-text: #5c5fc4;       /* accent used AS text on light bg */
-  --sd-accent-soft: rgba(186, 187, 241, .35);
-  --sd-nav: #dce0e8;
-  --sd-nav-ink: #5c5f77;
-  --sd-high: #d20f39;
-  --sd-mid: #df8e1d;
-  --sd-low: #40a02b;
-  --sd-font: "IBM Plex Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  --sd-radius: 10px;
-}
-:root[data-theme="deck"] {
   --sd-bg: #f2f4f6;
   --sd-surface: #ffffff;
   --sd-sunk: #e9edf0;
@@ -41,6 +22,27 @@
   --sd-high: #d2412c;
   --sd-mid: #c27c14;
   --sd-low: #2f7d63;
+  --sd-nav-brand: #ffffff;
+  --sd-font: "IBM Plex Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --sd-radius: 10px;
+}
+:root[data-theme="latte"] {
+  --sd-bg: #e6e9ef;
+  --sd-surface: #eff1f5;
+  --sd-sunk: #dce0e8;
+  --sd-line: #ccd0da;
+  --sd-ink: #4c4f69;
+  --sd-muted: #6c6f85;
+  --sd-accent: #babbf1;            /* fills: buttons, active tab, progress */
+  --sd-accent-ink: #4c4f69;        /* text ON accent fills */
+  --sd-accent-text: #5c5fc4;       /* accent used AS text on light bg */
+  --sd-accent-soft: rgba(186, 187, 241, .35);
+  --sd-nav: #dce0e8;
+  --sd-nav-ink: #5c5f77;
+  --sd-high: #d20f39;
+  --sd-mid: #df8e1d;
+  --sd-low: #40a02b;
+  --sd-nav-brand: var(--sd-ink);
 }
 
 /* ---------- 2. Tokens → Bootstrap variables ---------- */
@@ -108,15 +110,13 @@ body { font-feature-settings: "tnum"; }
 
 /* ---------- 3. Common header / navigation (same markup on every page) ---------- */
 .sd-navbar { background: var(--sd-nav); }
-.sd-navbar .navbar-brand { color: var(--sd-ink); font-weight: 700; display: flex; align-items: center; gap: .6rem; }
-:root[data-theme="deck"] .sd-navbar .navbar-brand { color: #fff; }
+.sd-navbar .navbar-brand { color: var(--sd-nav-brand); font-weight: 700; display: flex; align-items: center; gap: .6rem; }
 .sd-brand-mark {
   display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%;
   background: var(--sd-accent); color: var(--sd-accent-ink); font-size: .85rem;
 }
 .sd-navbar .nav-link { color: var(--sd-nav-ink); border-radius: 8px; padding: .4rem .75rem; font-size: .92rem; }
-.sd-navbar .nav-link:hover { color: var(--sd-ink); }
-:root[data-theme="deck"] .sd-navbar .nav-link:hover { color: #fff; }
+.sd-navbar .nav-link:hover { color: var(--sd-nav-brand); }
 .sd-navbar .nav-link.active { background: var(--sd-accent); color: var(--sd-accent-ink); font-weight: 600; }
 .sd-navbar .navbar-toggler { border-color: var(--sd-line); }
 .sd-navbar .navbar-toggler-icon {
@@ -139,5 +139,27 @@ body { font-feature-settings: "tnum"; }
 .sd-pri-mid  { color: var(--sd-mid);  background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
 .sd-pri-low  { color: var(--sd-low);  background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
 .sd-subj { color: var(--sd-muted); background: var(--sd-sunk); font-weight: 500; }
+
+/* links: Bootstrap 5.3 colors <a> via --bs-link-color-rgb, so set the color directly */
+a { color: var(--sd-accent-text); }
+a:hover { color: var(--sd-ink); }
+
+/* shared card bits — Main, Dashboard, Calendar, Timer, Progress */
+.sd-section-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.sd-stat-note { font-size: .78rem; color: var(--sd-muted); margin-top: .35rem; }
+.sd-empty { color: var(--sd-muted); font-size: .9rem; }
+.sd-more { font-size: .85rem; color: var(--sd-accent-text); text-decoration: none; }
+.sd-more:hover, .sd-more:focus-visible { color: var(--sd-ink); text-decoration: underline; }
+
+/* D-Day list — Main, Dashboard, Calendar */
+.sd-dday-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.sd-dday-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.sd-dday-name { min-width: 0; font-weight: 500; }
+.sd-dday-date { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
+.sd-dday-badge {
+  flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .9rem;
+  padding: .2rem .6rem; border-radius: 999px; background: var(--sd-accent-soft); color: var(--sd-accent-text);
+}
+.sd-dday-badge.is-today { background: var(--sd-accent); color: var(--sd-accent-ink); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

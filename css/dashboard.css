@@ -1,11 +1,7 @@
 /* =========================================================
    Dashboard page only. Colors come from var(--sd-*) tokens in style.css.
-   .sd-dday-* mirror main.css → move to style.css when merging.
    ========================================================= */
 
-.sd-section-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
-.sd-stat-note { font-size: .78rem; color: var(--sd-muted); margin-top: .35rem; }
-.sd-empty { color: var(--sd-muted); font-size: .9rem; }
 .sd-progress-lg { --bs-progress-height: .7rem; }
 
 /* ---------- weekly bar chart ---------- */
@@ -23,17 +19,6 @@
 .sd-subject-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; font-size: .88rem; }
 .sd-subject-row { display: flex; justify-content: space-between; gap: .75rem; }
 .sd-subject-count { color: var(--sd-muted); font-variant-numeric: tabular-nums; }
-
-/* ---------- D-Day ---------- */
-.sd-dday-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
-.sd-dday-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.sd-dday-name { min-width: 0; font-weight: 500; }
-.sd-dday-date { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
-.sd-dday-badge {
-  flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .9rem;
-  padding: .2rem .6rem; border-radius: 999px; background: var(--sd-accent-soft); color: var(--sd-accent-text);
-}
-.sd-dday-badge.is-today { background: var(--sd-accent); color: var(--sd-accent-ink); }
 
 /* ---------- goals ---------- */
 .sd-goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
@@ -60,7 +45,3 @@
 @media (max-width: 575.98px) {
   .sd-week-row { grid-template-columns: 1.5rem minmax(0, 1fr) 4.5rem; gap: .5rem; }
 }
-
-/* "more →" links: Bootstrap link color ignores --bs-link-color, so set it here */
-.sd-more { font-size: .85rem; color: var(--sd-accent-text); text-decoration: none; }
-.sd-more:hover, .sd-more:focus-visible { color: var(--sd-ink); text-decoration: underline; }
