@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo · Planner | Study Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/todo.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- ===== 공통 Header / Navigation (모든 페이지 동일, active만 변경) ===== -->
+  <nav class="navbar navbar-expand-lg sd-navbar">
+    <div class="container-xl">
+      <a class="navbar-brand" href="index.html"><span class="sd-brand-mark">2</span>Study Dashboard</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sdNav"
+              aria-controls="sdNav" aria-expanded="false" aria-label="메뉴 열기">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="sdNav">
+        <ul class="navbar-nav ms-lg-3 gap-lg-1">
+          <li class="nav-item"><a class="nav-link" href="index.html">Main</a></li>
+          <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="todo.html">Todo · Planner</a></li>
+          <li class="nav-item"><a class="nav-link" href="timer.html">Timer</a></li>
+          <li class="nav-item"><a class="nav-link" href="calendar.html">Calendar</a></li>
+          <li class="nav-item"><a class="nav-link" href="progress.html">Progress</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-xl py-4">
+    <header class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+      <div>
+        <div class="sd-eyebrow">할 일 · 학습 계획</div>
+        <h1 class="sd-page-title">Todo · Planner</h1>
+      </div>
+      <p class="text-secondary small mb-0" id="todayLabel"></p>
+    </header>
+
+    <!-- 요약 -->
+    <section class="row g-3 mb-4" aria-label="요약">
+      <div class="col-6 col-lg-3">
+        <div class="card h-100"><div class="card-body">
+          <div class="sd-stat-label">오늘 공부</div>
+          <div class="sd-stat-value" id="statToday">0</div>
+          <div class="progress mt-2" role="progressbar" aria-label="오늘 공부 진행" aria-valuemin="0" aria-valuemax="100" id="statTodayBarWrap">
+            <div class="progress-bar" id="statTodayBar" style="width:0%"></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card h-100"><div class="card-body">
+          <div class="sd-stat-label">진행 중인 할 일</div>
+          <div class="sd-stat-value" id="statOpen">0</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card h-100" id="statLateCard"><div class="card-body">
+          <div class="sd-stat-label">기한 지남</div>
+          <div class="sd-stat-value" id="statLate">0</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card h-100"><div class="card-body">
+          <div class="sd-stat-label">앞으로 7일 계획</div>
+          <div class="sd-stat-value" id="statWeek">0</div>
+        </div></div>
+      </div>
+    </section>
+
+    <div class="row g-4 align-items-start">
+      <!-- 왼쪽: 입력 폼 + 플래너 설정 -->
+      <div class="col-lg-4">
+        <div class="sd-form-card d-grid gap-3">
+          <form class="card" id="taskForm" novalidate>
+            <div class="card-body">
+              <h2 class="h6 fw-bold d-flex justify-content-between align-items-center mb-3">
+                <span id="formTitle">할 일 추가</span>
+                <span class="badge rounded-pill sd-editing-badge d-none" id="editingBadge">수정 중</span>
+              </h2>
+
+              <div class="mb-3">
+                <label for="taskTitle" class="form-label small text-secondary">제목</label>
+                <input type="text" class="form-control" id="taskTitle" maxlength="80" required
+                       placeholder="예: 자율주행 퀴즈 3 준비" autocomplete="off">
+                <div class="invalid-feedback">제목을 입력하세요.</div>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label for="taskType" class="form-label small text-secondary">종류</label>
+                  <select class="form-select" id="taskType"></select>
+                </div>
+                <div class="col-6">
+                  <label for="taskSubject" class="form-label small text-secondary">과목</label>
+                  <select class="form-select" id="taskSubject"></select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="taskDate" class="form-label small text-secondary">마감일</label>
+                <input type="date" class="form-control" id="taskDate" required>
+                <div class="invalid-feedback">마감일을 선택하세요.</div>
+              </div>
+
+              <div class="mb-3">
+                <span class="form-label small text-secondary d-block" id="sizeLabel">작업량 <span class="sd-hint">· 정확한 시간은 몰라도 됩니다</span></span>
+                <div class="btn-group w-100 sd-size-group" role="group" aria-labelledby="sizeLabel" id="sizeGroup"></div>
+                <p class="sd-size-hint mt-2 mb-1" id="sizeHint" aria-live="polite"></p>
+                <button class="btn btn-link btn-sm p-0 sd-tune-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#tuneBody"
+                        aria-expanded="false" aria-controls="tuneBody">세부 조정</button>
+                <div class="collapse" id="tuneBody">
+                  <div class="sd-tune pt-2">
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <label for="tuneWindow" class="form-label small text-secondary" id="tuneWindowLabel">시작 (마감 n일 전)</label>
+                        <input type="number" class="form-control form-control-sm" id="tuneWindow" min="0" max="30" inputmode="numeric">
+                      </div>
+                      <div class="col-6" id="tuneShortCol">
+                        <label for="tuneShort" class="form-label small text-secondary">세션 수</label>
+                        <input type="number" class="form-control form-control-sm" id="tuneShort" min="0" max="20" inputmode="numeric">
+                      </div>
+                      <div class="col-6">
+                        <label for="tuneHours" class="form-label small text-secondary" id="tuneHoursLabel">세션 길이 (시간)</label>
+                        <input type="number" class="form-control form-control-sm" id="tuneHours" min="0.5" max="12" step="0.5" inputmode="decimal">
+                      </div>
+                      <div class="col-6">
+                        <label for="tuneLong" class="form-label small text-secondary" id="tuneLongLabel">종일 (일)</label>
+                        <input type="number" class="form-control form-control-sm" id="tuneLong" min="0" max="4" inputmode="numeric">
+                      </div>
+                      <div class="col-6" id="tuneEarlyCol">
+                        <label for="tuneEarly" class="form-label small text-secondary">미리 복습 (그 전 n일)</label>
+                        <input type="number" class="form-control form-control-sm" id="tuneEarly" min="0" max="30" inputmode="numeric">
+                      </div>
+                    </div>
+                    <p class="small text-secondary mt-1 mb-0">비워 두면 작업량 기본값. <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="tuneReset">기본값으로</button></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <span class="form-label small text-secondary d-block" id="priLabel">우선순위</span>
+                <div class="btn-group w-100" role="group" aria-labelledby="priLabel">
+                  <input type="radio" class="btn-check" name="priority" id="priHigh" value="high" autocomplete="off">
+                  <label class="btn btn-outline-secondary sd-pri-btn sd-pri-high" for="priHigh">높음</label>
+                  <input type="radio" class="btn-check" name="priority" id="priMid" value="mid" autocomplete="off" checked>
+                  <label class="btn btn-outline-secondary sd-pri-btn sd-pri-mid" for="priMid">보통</label>
+                  <input type="radio" class="btn-check" name="priority" id="priLow" value="low" autocomplete="off">
+                  <label class="btn btn-outline-secondary sd-pri-btn sd-pri-low" for="priLow">낮음</label>
+                </div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1" id="submitBtn">추가</button>
+                <button type="button" class="btn btn-outline-secondary d-none" id="cancelBtn">취소</button>
+              </div>
+            </div>
+          </form>
+
+          <section class="card" aria-labelledby="settingsTitle">
+            <div class="card-body">
+              <button class="btn btn-link p-0 w-100 d-flex justify-content-between align-items-center sd-collapse-btn" type="button"
+                      data-bs-toggle="collapse" data-bs-target="#settingsBody" aria-expanded="false" aria-controls="settingsBody">
+                <span class="h6 fw-bold mb-0" id="settingsTitle">플래너 설정</span>
+                <span class="small text-secondary" id="settingsSummary"></span>
+              </button>
+              <div class="collapse" id="settingsBody">
+                <div class="pt-3">
+                  <span class="form-label small text-secondary d-block" id="availLabel">내 일주일 · 눌러서 바꾸기 (쉼 → 짧게 → 길게)</span>
+                  <div class="sd-weekpick mb-1" id="weekPick" role="group" aria-labelledby="availLabel"></div>
+                  <p class="small text-secondary mb-3">매주 반복되는 패턴이에요. 짧게: 몇 시간 공부 가능 · 길게: 종일 가능 · 특정 날짜를 쉬려면 아래 '쉬는 날'.</p>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <label for="shortHours" class="form-label small text-secondary">짧게 날 최대 공부</label>
+                      <select class="form-select" id="shortHours"></select>
+                    </div>
+                    <div class="col-6">
+                      <label for="longHours" class="form-label small text-secondary">종일 = </label>
+                      <select class="form-select" id="longHours"></select>
+                    </div>
+                  </div>
+
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="startEarly">
+                    <label class="form-check-label small" for="startEarly">시간 여유가 있으면 시험 공부를 미리 시작 <span class="text-secondary">(이틀에 한 번 1시간, 건너뛰어도 보충 없음)</span></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card sd-break-card" aria-labelledby="breakTitle">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-baseline gap-2 mb-1">
+                <h2 class="h6 fw-bold mb-0" id="breakTitle">쉬는 날</h2>
+                <span class="small text-secondary" id="breakCount"></span>
+              </div>
+              <p class="small text-secondary mb-3">이 날엔 아무것도 계획하지 않아요. 잡혀 있던 공부는 다른 날로 옮겨집니다.</p>
+              <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="breakToday">오늘 쉬기</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="breakTomorrow">내일 쉬기</button>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <label for="breakFrom" class="form-label small text-secondary">시작</label>
+                  <input type="date" class="form-control form-control-sm" id="breakFrom">
+                </div>
+                <div class="col-6">
+                  <label for="breakTo" class="form-label small text-secondary">끝 <span class="sd-hint">(하루면 비우기)</span></label>
+                  <input type="date" class="form-control form-control-sm" id="breakTo">
+                </div>
+                <div class="col-12">
+                  <label for="breakNote" class="form-label small text-secondary">메모 <span class="sd-hint">(선택)</span></label>
+                  <input type="text" class="form-control form-control-sm" id="breakNote" maxlength="20" placeholder="예: 가족 여행" autocomplete="off">
+                </div>
+              </div>
+              <p class="sd-break-error small mb-2 d-none" id="breakError" role="alert"></p>
+              <button type="button" class="btn btn-sm btn-primary w-100" id="addBreak">쉬는 날 추가</button>
+              <ul class="sd-break-list mt-3 mb-0" id="breakList"></ul>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 오늘의 계획 + 목록 / 주간 계획 -->
+      <div class="col-lg-8">
+        <section class="card sd-today-card mb-4" aria-labelledby="todayTitle">
+          <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
+              <h2 class="h6 fw-bold mb-0" id="todayTitle">오늘의 계획</h2>
+              <span class="small text-secondary" id="todayCount"></span>
+            </div>
+            <div class="alert alert-warning py-2 small d-none" id="overflowAlert" role="status"></div>
+            <div class="sd-break-today d-none" id="breakTodayNote">
+              <span id="breakTodayText">오늘은 쉬는 날이에요.</span>
+              <button type="button" class="btn btn-sm btn-link p-0" id="breakTodayUndo">취소하고 공부하기</button>
+            </div>
+            <ul class="sd-plan" id="todayPlan"></ul>
+            <p class="sd-plan-empty mb-0 d-none" id="todayEmpty">오늘은 계획된 세션이 없습니다.</p>
+          </div>
+        </section>
+
+        <div class="sd-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <ul class="nav nav-pills sd-view-tabs" role="group" aria-label="보기 전환">
+            <li class="nav-item"><button type="button" class="nav-link active" data-view="list" aria-pressed="true">할 일</button></li>
+            <li class="nav-item"><button type="button" class="nav-link" data-view="week" aria-pressed="false">주간 계획</button></li>
+          </ul>
+          <div class="d-flex flex-wrap align-items-center gap-2" id="listFilters">
+            <select class="form-select form-select-sm" id="filterStatus" aria-label="상태 필터">
+              <option value="open">진행 중</option>
+              <option value="done">완료</option>
+              <option value="all">전체</option>
+            </select>
+            <select class="form-select form-select-sm" id="filterType" aria-label="종류 필터">
+              <option value="all">모든 종류</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="listView"></div>
+
+        <div id="weekView" class="d-none">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <strong class="me-auto" id="weekLabel"></strong>
+            <div class="btn-group btn-group-sm" role="group" aria-label="주 선택">
+              <input type="radio" class="btn-check" name="weekPick" id="wk0" value="0" checked>
+              <label class="btn btn-outline-secondary" for="wk0">오늘부터 7일</label>
+              <input type="radio" class="btn-check" name="weekPick" id="wk1" value="7">
+              <label class="btn btn-outline-secondary" for="wk1">그다음 7일</label>
+            </div>
+          </div>
+          <div class="sd-week" id="weekGrid"></div>
+          <p class="small text-secondary mt-2 mb-0">세션 위치는 오늘 기준 예상입니다. 할 일을 추가하거나 세션을 체크하면 자동으로 다시 계산됩니다.</p>
+        </div>
+
+        <div class="sd-empty d-none" id="emptyState">
+          <p class="mb-3">아직 할 일이 없습니다. 왼쪽 폼에서 첫 할 일을 추가하세요.</p>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="seedBtn">예시 데이터 불러오기</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 할 일 1개 (todo.js가 복제해서 사용) -->
+  <template id="tplTask">
+    <li class="sd-task">
+      <input class="form-check-input" type="checkbox" data-action="complete" aria-label="완료">
+      <div class="sd-task-body">
+        <span class="sd-task-title"></span>
+        <div class="sd-task-meta">
+          <span class="badge rounded-pill sd-type"></span>
+          <span class="sd-size" aria-label=""></span>
+          <span class="badge rounded-pill sd-subj"></span>
+          <span class="sd-studied"></span>
+          <span class="sd-when"></span>
+          <span class="badge rounded-pill sd-custom d-none">맞춤</span>
+          <span class="badge rounded-pill sd-source d-none">캘린더</span>
+          <span class="badge rounded-pill sd-orphan d-none">캘린더에서 삭제됨</span>
+        </div>
+      </div>
+      <div class="sd-task-actions">
+        <button type="button" class="btn btn-sm btn-link" data-action="edit">수정</button>
+        <button type="button" class="btn btn-sm btn-link text-danger" data-action="delete">삭제</button>
+      </div>
+    </li>
+  </template>
+
+  <!-- 오늘의 계획 항목 1개 -->
+  <template id="tplPlan">
+    <li class="sd-plan-item">
+      <input class="form-check-input" type="checkbox" data-action="session">
+      <label class="sd-plan-title"></label>
+      <span class="badge rounded-pill sd-block"></span>
+      <span class="badge rounded-pill sd-reason d-none"></span>
+      <button type="button" class="btn btn-sm btn-outline-secondary sd-done-btn" data-action="finish">완료</button>
+    </li>
+  </template>
+
+  <!-- 삭제 확인 -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h6 fw-bold" id="deleteModalLabel">할 일 삭제</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">"<strong id="deleteTitle"></strong>"을(를) 삭제할까요? 남은 세션도 계획에서 빠집니다.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="button" class="btn btn-danger" id="confirmDelete">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 알림 -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg"></div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="닫기"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/planner.js" defer></script>
+  <script src="js/todo.js" defer></script>
+</body>
+</html>
