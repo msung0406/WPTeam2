@@ -1,0 +1,66 @@
+/* =========================================================
+   Dashboard page only. Colors come from var(--sd-*) tokens in style.css.
+   .sd-dday-* mirror main.css → move to style.css when merging.
+   ========================================================= */
+
+.sd-section-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.sd-stat-note { font-size: .78rem; color: var(--sd-muted); margin-top: .35rem; }
+.sd-empty { color: var(--sd-muted); font-size: .9rem; }
+.sd-progress-lg { --bs-progress-height: .7rem; }
+
+/* ---------- weekly bar chart ---------- */
+.sd-week-chart { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.sd-week-row { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) 5.5rem; gap: .75rem; align-items: center; }
+.sd-week-day { font-weight: 600; color: var(--sd-muted); text-align: center; }
+.sd-week-track { height: 1.1rem; border-radius: 6px; background: var(--sd-sunk); overflow: hidden; }
+.sd-week-bar { display: block; height: 100%; border-radius: 6px; background: var(--sd-accent); transition: width .3s ease; }
+.sd-week-value { font-size: .85rem; font-variant-numeric: tabular-nums; text-align: right; color: var(--sd-ink); }
+.sd-week-row.is-today .sd-week-day { color: var(--sd-accent-text); }
+.sd-week-row.is-today .sd-week-bar { background: var(--sd-accent-text); }
+.sd-week-row.is-future .sd-week-value { color: var(--sd-muted); }
+
+/* ---------- subject completion ---------- */
+.sd-subject-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; font-size: .88rem; }
+.sd-subject-row { display: flex; justify-content: space-between; gap: .75rem; }
+.sd-subject-count { color: var(--sd-muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- D-Day ---------- */
+.sd-dday-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.sd-dday-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.sd-dday-name { min-width: 0; font-weight: 500; }
+.sd-dday-date { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
+.sd-dday-badge {
+  flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .9rem;
+  padding: .2rem .6rem; border-radius: 999px; background: var(--sd-accent-soft); color: var(--sd-accent-text);
+}
+.sd-dday-badge.is-today { background: var(--sd-accent); color: var(--sd-accent-ink); }
+
+/* ---------- goals ---------- */
+.sd-goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.sd-goal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; margin-bottom: .45rem; }
+.sd-goal-title { min-width: 0; display: grid; gap: .25rem; font-weight: 500; }
+.sd-goal-meta { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; }
+.sd-goal-type { font-size: .75rem; color: var(--sd-muted); }
+.sd-goal-due { flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sd-accent-text); }
+.sd-goal-due.is-late { color: var(--sd-high); }
+.sd-goal-foot { font-size: .78rem; color: var(--sd-muted); margin-top: .3rem; }
+
+/* ---------- upcoming ---------- */
+.sd-upcoming { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.sd-upcoming-item { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: .75rem; align-items: center; }
+.sd-upcoming-date {
+  display: grid; justify-items: center; padding: .3rem 0; border-radius: 8px; background: var(--sd-sunk);
+  line-height: 1.2;
+}
+.sd-upcoming-day { font-weight: 600; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.sd-upcoming-dow { font-size: .7rem; color: var(--sd-muted); }
+.sd-upcoming-body { min-width: 0; font-weight: 500; }
+.sd-upcoming-meta { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
+
+@media (max-width: 575.98px) {
+  .sd-week-row { grid-template-columns: 1.5rem minmax(0, 1fr) 4.5rem; gap: .5rem; }
+}
+
+/* "more →" links: Bootstrap link color ignores --bs-link-color, so set it here */
+.sd-more { font-size: .85rem; color: var(--sd-accent-text); text-decoration: none; }
+.sd-more:hover, .sd-more:focus-visible { color: var(--sd-ink); text-decoration: underline; }
