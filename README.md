@@ -32,8 +32,8 @@ Header/Navigation은 todo.html의 `<nav>` 블록을 그대로 복사하고 `acti
 
 ## 테마
 - 색은 **style.css 맨 위 토큰 블록에만** 있음. 페이지 CSS에서는 `var(--sd-*)`만 사용 (hex 직접 쓰지 않기).
-- 기본: Catppuccin Latte + `#BABBF1`
-- 중간보고서 색(남색/주황): `<html lang="ko" data-theme="deck">`
+- 기본: 중간보고서 색 (남색/주황)
+- 예전 파스텔 (Catppuccin Latte): `<html lang="ko" data-theme="latte">`
 - 확정되면 토큰 블록만 바꾸면 전 페이지 반영.
 
 ## 데이터 (storage.js v3)

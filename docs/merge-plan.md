@@ -98,10 +98,13 @@ SD.date.today()                     // "2026-11-15" (한국 시간 기준)
 
 ## 6. 체크리스트
 
-- [ ] 팀 합의: 데이터는 `SD`로 통일, 공부 시간 기준
-- [ ] `todo-planner` → `main`
-- [ ] `main-dashboard` → `main`
-- [ ] Calendar `SD` 전환 + 공통 Nav · 토큰
-- [ ] Timer/Progress 파일 분리 + `SD.addStudyLog` + 공통 Nav · 토큰
-- [ ] 공통 CSS를 style.css로 이동, 링크 색 수정
-- [ ] 6개 페이지 Nav 링크 전부 열리는지, 모바일(390px) 가로 스크롤 없는지 확인
+`integration` 브랜치에서 진행 (2026-11-19)
+
+- [ ] 팀 합의: 데이터는 `SD`로 통일, 공부 시간 기준, 발표 테마 기본
+- [x] `todo-planner`, `main-dashboard`, `calandar-/-D-DAY`, `Timer` 병합 (각자 커밋 이력 유지)
+- [x] 발표 테마(남색/주황)를 기본으로, 파스텔은 `data-theme="latte"`
+- [x] Calendar `SD` 전환 + 공통 Nav · 토큰, D-Day는 calendar.html 안으로
+- [x] Timer/Progress 파일 분리 + `SD.addStudyLog` + 뽀모도로 + 공통 Nav · 토큰
+- [x] 공통 CSS를 style.css로 이동, 링크 색 수정
+- [x] 6개 페이지 Nav 링크 전부 열리는지, 모바일(390px) 가로 스크롤 없는지 확인
+- [ ] 각 담당자 확인 후 `integration` → `main` PR
