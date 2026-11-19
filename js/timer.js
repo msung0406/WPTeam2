@@ -1,472 +1,495 @@
+/* =========================================================
+   Timer — stopwatch + pomodoro
+   Finished focus time is saved with SD.addStudyLog (whole minutes, 1분 이상만).
+   Breaks are not saved. A running timer survives a reload:
+   its start time is kept in localStorage "timerState" (this page's UI state, not shared data).
+   Maintainer: 김민성
+   ========================================================= */
 (() => {
-  const STORAGE_KEYS = {
-    records: "studyTimer.records",
-    subjects: "studyTimer.subjects",
-    goal: "studyTimer.dailyGoal",
-    theme: "studyTimer.theme",
+  "use strict";
+
+  const D = SD.date;
+  const STATE_KEY = "timerState";
+  const RECENT_LIMIT = 5;
+  const LONG_BREAK_EVERY = 4; // 4번째 집중 뒤에는 긴 휴식
+  const TICK_MS = 250;
+
+  const PHASES = {
+    focus: { label: "집중", min: 1, max: 120, minutes: 25 },
+    short: { label: "짧은 휴식", min: 1, max: 30, minutes: 5 },
+    long: { label: "긴 휴식", min: 1, max: 60, minutes: 15 },
   };
+  const LOG_MODE_LABEL = { stopwatch: "스톱워치", focus: "뽀모도로" };
 
-  const DEFAULT_SUBJECTS = ["수학", "영어", "국어", "과학", "코딩", "기타"];
-  const DEFAULT_GOAL = 120;
-
+  const $ = (sel) => document.querySelector(sel);
   const els = {
-    themeToggle: document.getElementById("themeToggle"),
-    progressToggle: document.getElementById("progressToggle"),
-    progressClose: document.getElementById("progressClose"),
-    progressPanel: document.getElementById("progressPanel"),
-    layout: document.querySelector(".layout"),
-    subjectSelect: document.getElementById("subjectSelect"),
-    addSubjectBtn: document.getElementById("addSubjectBtn"),
-    timerDisplay: document.getElementById("timerDisplay"),
-    timerStatus: document.getElementById("timerStatus"),
-    startBtn: document.getElementById("startBtn"),
-    pauseBtn: document.getElementById("pauseBtn"),
-    stopBtn: document.getElementById("stopBtn"),
-    sessionTime: document.getElementById("sessionTime"),
-    todayTime: document.getElementById("todayTime"),
-    recentList: document.getElementById("recentList"),
-    dailyGoal: document.getElementById("dailyGoal"),
-    saveGoalBtn: document.getElementById("saveGoalBtn"),
-    goalBar: document.getElementById("goalBar"),
-    goalText: document.getElementById("goalText"),
-    statToday: document.getElementById("statToday"),
-    statWeek: document.getElementById("statWeek"),
-    dailyChart: document.getElementById("dailyChart"),
-    subjectChart: document.getElementById("subjectChart"),
-    allRecordsList: document.getElementById("allRecordsList"),
-    clearRecordsBtn: document.getElementById("clearRecordsBtn"),
+    todayLabel: $("#todayLabel"),
+    modeButtons: document.querySelectorAll("[data-mode]"),
+    phaseTabs: $("#phaseTabs"),
+    phaseButtons: document.querySelectorAll("#phaseTabs [data-phase]"),
+    subject: $("#subjectSelect"),
+    task: $("#taskSelect"),
+    clock: $("#clock"),
+    clockStatus: $("#clockStatus"),
+    phaseBarWrap: $("#phaseBarWrap"),
+    phaseBar: $("#phaseBar"),
+    startBtn: $("#startBtn"),
+    stopBtn: $("#stopBtn"),
+    resetBtn: $("#resetBtn"),
+    notice: $("#notice"),
+    minutesBox: $("#minutesBox"),
+    minuteInputs: document.querySelectorAll("#minutesBox [data-phase]"),
+    todayTotal: $("#todayTotal"),
+    todayNote: $("#todayNote"),
+    recentList: $("#recentList"),
+    recentEmpty: $("#recentEmpty"),
   };
 
-  let records = loadJson(STORAGE_KEYS.records, []);
-  let subjects = loadJson(STORAGE_KEYS.subjects, DEFAULT_SUBJECTS);
-  let dailyGoal = Number(localStorage.getItem(STORAGE_KEYS.goal)) || DEFAULT_GOAL;
+  function make(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined) el.textContent = text;
+    return el;
+  }
 
-  let running = false;
-  let paused = false;
-  let startedAt = null;
-  let accumulatedMs = 0;
+  /* ---------- state (saved so a reload keeps the running timer) ---------- */
+  function defaultState() {
+    return {
+      mode: "stopwatch", // "stopwatch" | "pomodoro"
+      subject: SD.SUBJECTS[0],
+      taskId: null,
+      running: false,
+      startedAt: null, // Date.now() when the current run started
+      accumulatedMs: 0, // time from earlier runs, before the last pause
+      phase: "focus", // pomodoro only: "focus" | "short" | "long"
+      focusCount: 0, // finished focus sessions, decides short vs long break
+      minutes: {
+        focus: PHASES.focus.minutes,
+        short: PHASES.short.minutes,
+        long: PHASES.long.minutes,
+      },
+    };
+  }
+
+  function clampMinutes(phase, value) {
+    const n = parseInt(value, 10);
+    const { min, max, minutes } = PHASES[phase];
+    if (!Number.isFinite(n)) return minutes;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  function loadState() {
+    const base = defaultState();
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem(STATE_KEY));
+    } catch (e) {
+      saved = null;
+    }
+    if (!saved || typeof saved !== "object") return base;
+
+    const s = {
+      ...base,
+      ...saved,
+      minutes: { ...base.minutes, ...saved.minutes },
+    };
+    if (!["stopwatch", "pomodoro"].includes(s.mode)) s.mode = base.mode;
+    if (!SD.SUBJECTS.includes(s.subject)) s.subject = base.subject;
+    if (typeof s.taskId !== "number") s.taskId = null;
+    if (!(s.phase in PHASES)) s.phase = "focus";
+    s.running = s.running === true && Number.isFinite(s.startedAt);
+    if (!s.running) s.startedAt = null;
+    s.accumulatedMs =
+      Number.isFinite(s.accumulatedMs) && s.accumulatedMs > 0
+        ? s.accumulatedMs
+        : 0;
+    s.focusCount =
+      Number.isInteger(s.focusCount) && s.focusCount > 0 ? s.focusCount : 0;
+    Object.keys(PHASES).forEach((p) => {
+      s.minutes[p] = clampMinutes(p, s.minutes[p]);
+    });
+    return s;
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    } catch (e) {
+      // storage blocked: the timer still works, it just won't survive a reload
+    }
+  }
+
+  const state = loadState();
   let tickId = null;
 
-  function loadJson(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return fallback;
-      const parsed = JSON.parse(raw);
-      return parsed ?? fallback;
-    } catch {
-      return fallback;
+  /* ---------- time ---------- */
+  const isPomodoro = () => state.mode === "pomodoro";
+  const elapsedMs = () =>
+    Math.max(
+      0,
+      state.accumulatedMs + (state.running ? Date.now() - state.startedAt : 0),
+    );
+  const phaseMs = () => state.minutes[state.phase] * 60000;
+  const remainingMs = () => Math.max(0, phaseMs() - elapsedMs());
+  const inSession = () => state.running || state.accumulatedMs > 0;
+
+  const pad = (n) => String(n).padStart(2, "0");
+  function formatClock(ms, withHours) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (withHours) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    return `${pad(h * 60 + m)}:${pad(s)}`;
+  }
+
+  // countdown rounds up so it shows 25:00 at the start, not 24:59
+  const clockText = () =>
+    isPomodoro()
+      ? formatClock(Math.ceil(remainingMs() / 1000) * 1000, false)
+      : formatClock(elapsedMs(), true);
+
+  /* ---------- saving logs ---------- */
+  function openTasks() {
+    return SD.activeTasks()
+      .filter((t) => !t.completed)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  function saveLog(minutes, mode) {
+    const taskId = openTasks().some((t) => t.id === state.taskId)
+      ? state.taskId
+      : null;
+    return SD.addStudyLog({ subject: state.subject, minutes, taskId, mode });
+  }
+
+  /* ---------- actions ---------- */
+  function start() {
+    if (state.running) return;
+    state.running = true;
+    state.startedAt = Date.now();
+    setNotice("");
+    saveState();
+    startTick();
+    render();
+  }
+
+  function pause() {
+    if (!state.running) return;
+    state.accumulatedMs = elapsedMs();
+    state.running = false;
+    state.startedAt = null;
+    saveState();
+    stopTick();
+    render();
+  }
+
+  function clearSession() {
+    state.running = false;
+    state.startedAt = null;
+    state.accumulatedMs = 0;
+    stopTick();
+  }
+
+  // stopwatch: stop and save the whole minutes
+  function stopStopwatch() {
+    const minutes = Math.floor(elapsedMs() / 60000);
+    clearSession();
+    if (minutes >= 1) {
+      saveLog(minutes, "stopwatch");
+      setNotice(`${state.subject} ${Stats.formatMinutes(minutes)} 기록했어요.`);
+    } else {
+      setNotice("1분 미만은 기록하지 않아요.");
     }
+    saveState();
+    renderAll();
   }
 
-  function saveRecords() {
-    localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records));
+  // pomodoro: back to the start of this phase, nothing saved
+  function resetPomodoro() {
+    clearSession();
+    setNotice("");
+    saveState();
+    render();
   }
 
-  function saveSubjects() {
-    localStorage.setItem(STORAGE_KEYS.subjects, JSON.stringify(subjects));
-  }
+  // pomodoro: the countdown reached 0
+  function finishPhase() {
+    const finished = state.phase;
+    clearSession();
 
-  function formatDuration(ms) {
-    const totalSec = Math.max(0, Math.floor(ms / 1000));
-    const h = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-    const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-    const s = String(totalSec % 60).padStart(2, "0");
-    return `${h}:${m}:${s}`;
-  }
-
-  function formatMinutes(ms) {
-    return Math.round(ms / 60000);
-  }
-
-  function toDateKey(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function startOfWeek(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - diff);
-    return d;
-  }
-
-  function currentElapsedMs() {
-    if (!running || paused || !startedAt) return accumulatedMs;
-    return accumulatedMs + (Date.now() - startedAt);
-  }
-
-  function setTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem(STORAGE_KEYS.theme, theme);
-    els.themeToggle.textContent = theme === "dark" ? "라이트모드" : "다크모드";
-  }
-
-  function initTheme() {
-    const saved = localStorage.getItem(STORAGE_KEYS.theme);
-    setTheme(saved === "dark" ? "dark" : "light");
-  }
-
-  function renderSubjects() {
-    const current = els.subjectSelect.value;
-    els.subjectSelect.innerHTML = subjects
-      .map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`)
-      .join("");
-    if (subjects.includes(current)) {
-      els.subjectSelect.value = current;
+    if (finished === "focus") {
+      const minutes = state.minutes.focus;
+      saveLog(minutes, "focus");
+      state.focusCount += 1;
+      state.phase =
+        state.focusCount % LONG_BREAK_EVERY === 0 ? "long" : "short";
+      setNotice(
+        `집중 ${minutes}분 기록했어요. 이제 ${state.minutes[state.phase]}분 ${PHASES[state.phase].label}.`,
+      );
+    } else {
+      state.phase = "focus";
+      setNotice("휴식 끝! 다시 집중해 볼까요?");
     }
+    saveState();
+    renderAll();
   }
 
-  function escapeHtml(text) {
-    return String(text)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
+  function selectMode(mode) {
+    if (inSession() || mode === state.mode) return;
+    state.mode = mode;
+    setNotice("");
+    saveState();
+    render();
   }
 
-  function updateTimerButtons() {
-    els.startBtn.disabled = running && !paused;
-    els.pauseBtn.disabled = !running || paused;
-    els.stopBtn.disabled = !running && accumulatedMs === 0;
-    els.subjectSelect.disabled = running;
-    els.addSubjectBtn.disabled = running;
+  function selectPhase(phase) {
+    if (inSession() || phase === state.phase) return;
+    state.phase = phase;
+    setNotice("");
+    saveState();
+    render();
   }
 
-  function updateTimerView() {
-    const elapsed = currentElapsedMs();
-    els.timerDisplay.textContent = formatDuration(elapsed);
-    els.sessionTime.textContent = formatDuration(elapsed);
-    els.todayTime.textContent = formatDuration(getTodayMs() + (running ? elapsed : 0));
-
-    if (!running && accumulatedMs === 0) {
-      els.timerStatus.textContent = "대기 중";
-    } else if (paused) {
-      els.timerStatus.textContent = "일시정지";
-    } else if (running) {
-      els.timerStatus.textContent = `"${els.subjectSelect.value}" 학습 중`;
+  /* ---------- tick ---------- */
+  function tick() {
+    if (isPomodoro() && state.running && remainingMs() === 0) {
+      finishPhase();
+      return;
     }
-  }
-
-  function getTodayMs() {
-    const today = toDateKey(new Date());
-    return records
-      .filter((r) => r.date === today)
-      .reduce((sum, r) => sum + r.durationMs, 0);
-  }
-
-  function getWeekMs() {
-    const start = startOfWeek(new Date()).getTime();
-    return records
-      .filter((r) => new Date(r.endedAt).getTime() >= start)
-      .reduce((sum, r) => sum + r.durationMs, 0);
+    renderClock();
   }
 
   function startTick() {
     stopTick();
-    tickId = setInterval(() => {
-      updateTimerView();
-      if (els.layout.classList.contains("progress-open")) renderProgress();
-    }, 250);
+    tickId = setInterval(tick, TICK_MS);
   }
 
   function stopTick() {
-    if (tickId) {
-      clearInterval(tickId);
-      tickId = null;
+    if (tickId) clearInterval(tickId);
+    tickId = null;
+  }
+
+  /* ---------- render ---------- */
+  function setNotice(text) {
+    els.notice.textContent = text;
+  }
+
+  function renderClock() {
+    const text = clockText();
+    els.clock.textContent = text;
+    document.title = state.running
+      ? `${text} · Timer`
+      : "Timer | Study Dashboard";
+
+    if (isPomodoro()) {
+      const pct = Math.min(100, Math.round((elapsedMs() / phaseMs()) * 100));
+      els.phaseBar.style.width = `${pct}%`;
+      els.phaseBarWrap.setAttribute("aria-valuenow", pct);
     }
   }
 
-  function startTimer() {
-    if (running && !paused) return;
-
-    if (!running) {
-      accumulatedMs = 0;
-    running = true;
-      paused = false;
-      startedAt = Date.now();
-    } else if (paused) {
-      paused = false;
-      startedAt = Date.now();
-    }
-
-    startTick();
-    updateTimerButtons();
-    updateTimerView();
+  function statusText() {
+    const isBreak = isPomodoro() && state.phase !== "focus";
+    const what = isPomodoro() ? PHASES[state.phase].label : "공부";
+    if (state.running)
+      return isBreak ? `${what} 중` : `${state.subject} · ${what} 중`;
+    if (state.accumulatedMs > 0) return "일시정지";
+    if (isPomodoro())
+      return `${what} ${state.minutes[state.phase]}분 · 대기 중`;
+    return "대기 중";
   }
 
-  function pauseTimer() {
-    if (!running || paused) return;
-    accumulatedMs += Date.now() - startedAt;
-    startedAt = null;
-    paused = true;
-    stopTick();
-    updateTimerButtons();
-    updateTimerView();
-  }
+  function render() {
+    const pomodoro = isPomodoro();
+    const busy = inSession();
+    const isBreak = pomodoro && state.phase !== "focus";
 
-  function stopTimer() {
-    if (!running && accumulatedMs === 0) return;
-
-    let durationMs = accumulatedMs;
-    if (running && !paused && startedAt) {
-      durationMs += Date.now() - startedAt;
-    }
-
-    const subject = els.subjectSelect.value;
-    const endedAt = new Date();
-
-    if (durationMs >= 1000) {
-      records.unshift({
-        id: crypto.randomUUID(),
-        subject,
-        durationMs,
-        endedAt: endedAt.toISOString(),
-        date: toDateKey(endedAt),
-      });
-      saveRecords();
-    }
-
-    running = false;
-    paused = false;
-    startedAt = null;
-    accumulatedMs = 0;
-    stopTick();
-    updateTimerButtons();
-    updateTimerView();
-    renderRecent();
-    renderProgress();
-  }
-
-  function renderRecent() {
-    const recent = records.slice(0, 8);
-    if (!recent.length) {
-      els.recentList.innerHTML = `<li class="empty">아직 기록이 없습니다.</li>`;
-      return;
-    }
-
-    els.recentList.innerHTML = recent
-      .map((r) => {
-        const time = new Date(r.endedAt).toLocaleString("ko-KR", {
-          month: "numeric",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        return `<li>
-          <span>${escapeHtml(r.subject)} · ${formatDuration(r.durationMs)}</span>
-          <span class="meta">${time}</span>
-        </li>`;
-      })
-      .join("");
-  }
-
-  function renderProgress() {
-    const liveToday = getTodayMs() + (running ? currentElapsedMs() : 0);
-    const weekMs = getWeekMs() + (running ? currentElapsedMs() : 0);
-    const goalMs = dailyGoal * 60 * 1000;
-    const percent = Math.min(100, Math.round((liveToday / goalMs) * 100));
-
-    els.statToday.textContent = formatDuration(liveToday);
-    els.statWeek.textContent = formatDuration(weekMs);
-    els.goalBar.style.width = `${percent}%`;
-    els.goalText.textContent = `${formatMinutes(liveToday)} / ${dailyGoal}분 (${percent}%)`;
-    els.dailyGoal.value = String(dailyGoal);
-
-    renderDailyChart();
-    renderSubjectChart();
-    renderAllRecords();
-  }
-
-  function renderDailyChart() {
-    const days = [];
-    for (let i = 6; i >= 0; i -= 1) {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() - i);
-      days.push(d);
-    }
-
-    const todayKey = toDateKey(new Date());
-    const values = days.map((d) => {
-      const key = toDateKey(d);
-      let ms = records
-        .filter((r) => r.date === key)
-        .reduce((sum, r) => sum + r.durationMs, 0);
-      if (key === todayKey && running) ms += currentElapsedMs();
-      return { date: d, ms };
+    els.modeButtons.forEach((btn) => {
+      const on = btn.dataset.mode === state.mode;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", on);
+      btn.disabled = busy && !on;
+    });
+    els.phaseButtons.forEach((btn) => {
+      const on = btn.dataset.phase === state.phase;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", on);
+      btn.disabled = busy && !on;
+    });
+    els.minuteInputs.forEach((input) => {
+      input.value = state.minutes[input.dataset.phase];
+      input.disabled = busy;
     });
 
-    const max = Math.max(...values.map((v) => v.ms), 1);
+    els.phaseTabs.classList.toggle("d-none", !pomodoro);
+    els.minutesBox.classList.toggle("d-none", !pomodoro);
+    els.phaseBarWrap.classList.toggle("invisible", !pomodoro);
+    els.stopBtn.classList.toggle("d-none", pomodoro);
+    els.resetBtn.classList.toggle("d-none", !pomodoro);
 
-    els.dailyChart.innerHTML = values
-      .map((v) => {
-        const height = Math.max(2, Math.round((v.ms / max) * 110));
-        const label = `${v.date.getMonth() + 1}/${v.date.getDate()}`;
-        return `<div class="bar-item">
-          <span class="bar-value">${formatMinutes(v.ms)}m</span>
-          <div class="bar" style="height:${height}px"></div>
-          <span class="bar-label">${label}</span>
-        </div>`;
-      })
-      .join("");
+    els.subject.value = state.subject;
+    els.subject.disabled = busy;
+    els.task.disabled = busy;
+
+    els.startBtn.textContent = state.running
+      ? "일시정지"
+      : busy
+        ? "계속"
+        : "시작";
+    els.stopBtn.disabled = !busy;
+    els.resetBtn.disabled = !busy;
+
+    els.clock.classList.toggle("is-break", isBreak);
+    els.clock.classList.toggle("is-paused", busy && !state.running);
+    els.phaseBarWrap.classList.toggle("is-break", isBreak);
+    els.clockStatus.textContent = statusText();
+    renderClock();
   }
 
-  function renderSubjectChart() {
-    const map = new Map();
-    for (const r of records) {
-      map.set(r.subject, (map.get(r.subject) || 0) + r.durationMs);
-    }
-    if (running) {
-      const subject = els.subjectSelect.value;
-      map.set(subject, (map.get(subject) || 0) + currentElapsedMs());
-    }
-
-    const entries = [...map.entries()].sort((a, b) => b[1] - a[1]);
-    if (!entries.length) {
-      els.subjectChart.innerHTML = `<p class="empty">과목별 기록이 없습니다.</p>`;
-      return;
-    }
-
-    const max = Math.max(...entries.map(([, ms]) => ms), 1);
-    els.subjectChart.innerHTML = entries
-      .map(([name, ms]) => {
-        const width = Math.max(2, Math.round((ms / max) * 100));
-        return `<div class="subject-row-bar">
-          <span class="name">${escapeHtml(name)}</span>
-          <div class="track"><div class="fill" style="width:${width}%"></div></div>
-          <span class="value">${formatDuration(ms)}</span>
-        </div>`;
-      })
-      .join("");
+  function renderSubjects() {
+    els.subject.replaceChildren(
+      ...SD.SUBJECTS.map((s) => {
+        const opt = make("option", "", s);
+        opt.value = s;
+        return opt;
+      }),
+    );
   }
 
-  function renderAllRecords() {
-    if (!records.length) {
-      els.allRecordsList.innerHTML = `<li class="empty">저장된 기록이 없습니다.</li>`;
-      return;
-    }
+  function renderTasks() {
+    const tasks = openTasks();
+    if (!tasks.some((t) => t.id === state.taskId)) state.taskId = null;
 
-    els.allRecordsList.innerHTML = records
-      .map((r) => {
-        const time = new Date(r.endedAt).toLocaleString("ko-KR");
-        return `<li>
-          <span>${escapeHtml(r.subject)} · ${formatDuration(r.durationMs)}</span>
-          <span class="meta">${time}</span>
-        </li>`;
-      })
-      .join("");
+    const none = make(
+      "option",
+      "",
+      tasks.length ? "연결 안 함" : "열린 할 일 없음",
+    );
+    none.value = "";
+    els.task.replaceChildren(
+      none,
+      ...tasks.map((t) => {
+        const opt = make("option", "", `${t.title} · ${t.subject}`);
+        opt.value = String(t.id);
+        return opt;
+      }),
+    );
+    els.task.value = state.taskId === null ? "" : String(state.taskId);
   }
 
-  let progressOpen = false;
-  let progressAnimating = false;
+  function renderToday() {
+    const today = D.today();
+    const logs = SD.getStudyLogs();
+    const todayLogs = logs.filter((l) => l.date === today);
+    const focusCount = todayLogs.filter((l) => l.mode === "focus").length;
 
-  function setProgressOpen(open) {
-    if (progressAnimating || open === progressOpen) return;
+    els.todayLabel.textContent = Stats.formatDate(today);
+    els.todayTotal.textContent = Stats.formatMinutes(
+      Stats.minutesOn(today, logs),
+    );
+    els.todayNote.textContent = todayLogs.length
+      ? `기록 ${todayLogs.length}개${focusCount ? ` · 뽀모도로 ${focusCount}회` : ""}`
+      : "아직 기록이 없습니다";
 
-    progressOpen = open;
-    progressAnimating = true;
+    renderRecent(logs, today);
+  }
 
-    els.layout.classList.toggle("progress-open", open);
-    els.progressPanel.setAttribute("aria-hidden", String(!open));
-    els.progressToggle.setAttribute("aria-expanded", String(open));
-    els.progressToggle.textContent = open ? "Progress 닫기" : "Progress";
+  function renderRecent(logs, today) {
+    const titles = new Map(SD.getTasks().map((t) => [t.id, t.title]));
+    const recent = [...logs].sort((a, b) => b.id - a.id).slice(0, RECENT_LIMIT);
 
-    if (open) renderProgress();
+    els.recentList.replaceChildren();
+    els.recentEmpty.classList.toggle("d-none", recent.length > 0);
+    recent.forEach((l) => {
+      const li = make("li", "sd-log-item");
 
-    const onEnd = (event) => {
-      if (event.target !== els.progressPanel) return;
-      if (event.propertyName !== "width" && event.propertyName !== "flex-basis") {
-        return;
+      const body = make("div", "sd-log-body");
+      const meta = make("div", "sd-log-meta");
+      meta.append(
+        make("span", "badge sd-subj", l.subject),
+        make("span", "", LOG_MODE_LABEL[l.mode] || "기록"),
+      );
+      body.append(meta);
+      if (titles.has(l.taskId)) {
+        body.append(
+          make("div", "sd-log-task text-truncate", titles.get(l.taskId)),
+        );
       }
-      els.progressPanel.removeEventListener("transitionend", onEnd);
-      progressAnimating = false;
-    };
 
-    els.progressPanel.addEventListener("transitionend", onEnd);
-    window.setTimeout(() => {
-      progressAnimating = false;
-    }, 400);
+      const side = make("div", "sd-log-side");
+      const day =
+        l.date === today
+          ? "오늘"
+          : Stats.formatDate(l.date, {
+              month: "numeric",
+              day: "numeric",
+              weekday: "short",
+            });
+      side.append(
+        make("span", "sd-log-minutes", Stats.formatMinutes(l.minutes)),
+        make("span", "sd-log-date", day),
+      );
+
+      li.append(body, side);
+      els.recentList.append(li);
+    });
   }
 
-  function isProgressOpen() {
-    return progressOpen;
+  function renderAll() {
+    renderTasks();
+    renderToday();
+    render();
   }
 
-  function addSubject() {
-    const name = prompt("추가할 과목 이름을 입력하세요.");
-    if (!name) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    if (subjects.includes(trimmed)) {
-      els.subjectSelect.value = trimmed;
-      return;
-    }
-    subjects.push(trimmed);
-    saveSubjects();
-    renderSubjects();
-    els.subjectSelect.value = trimmed;
-  }
+  /* ---------- events ---------- */
+  els.modeButtons.forEach((btn) =>
+    btn.addEventListener("click", () => selectMode(btn.dataset.mode)),
+  );
+  els.phaseButtons.forEach((btn) =>
+    btn.addEventListener("click", () => selectPhase(btn.dataset.phase)),
+  );
+  els.minuteInputs.forEach((input) =>
+    input.addEventListener("change", () => {
+      const phase = input.dataset.phase;
+      state.minutes[phase] = clampMinutes(phase, input.value);
+      saveState();
+      render();
+    }),
+  );
 
-  els.themeToggle.addEventListener("click", () => {
-    const next =
-      document.documentElement.getAttribute("data-theme") === "dark"
-        ? "light"
-        : "dark";
-    setTheme(next);
+  els.subject.addEventListener("change", () => {
+    state.subject = els.subject.value;
+    saveState();
+    render();
   });
 
-  els.progressToggle.addEventListener("click", () => {
-    setProgressOpen(!isProgressOpen());
+  // linking a task also picks its subject when it is one of SD.SUBJECTS
+  els.task.addEventListener("change", () => {
+    state.taskId = els.task.value ? Number(els.task.value) : null;
+    const task = openTasks().find((t) => t.id === state.taskId);
+    if (task && SD.SUBJECTS.includes(task.subject))
+      state.subject = task.subject;
+    saveState();
+    render();
   });
 
-  els.progressClose.addEventListener("click", () => {
-    setProgressOpen(false);
+  els.startBtn.addEventListener("click", () =>
+    state.running ? pause() : start(),
+  );
+  els.stopBtn.addEventListener("click", stopStopwatch);
+  els.resetBtn.addEventListener("click", resetPomodoro);
+
+  SD.onChange([SD.KEYS.studyLogs, SD.KEYS.tasks], () => {
+    renderTasks();
+    renderToday();
   });
 
-  els.startBtn.addEventListener("click", startTimer);
-  els.pauseBtn.addEventListener("click", pauseTimer);
-  els.stopBtn.addEventListener("click", stopTimer);
-  els.addSubjectBtn.addEventListener("click", addSubject);
-
-  els.saveGoalBtn.addEventListener("click", () => {
-    const value = Number(els.dailyGoal.value);
-    if (!Number.isFinite(value) || value < 1) {
-      alert("일일 목표는 1분 이상이어야 합니다.");
-      return;
-    }
-    dailyGoal = Math.min(1440, Math.floor(value));
-    localStorage.setItem(STORAGE_KEYS.goal, String(dailyGoal));
-    renderProgress();
-  });
-
-  els.clearRecordsBtn.addEventListener("click", () => {
-    if (!confirm("모든 학습 기록을 삭제할까요?")) return;
-    records = [];
-    saveRecords();
-    renderRecent();
-    renderProgress();
-    updateTimerView();
-  });
-
-  window.addEventListener("beforeunload", (event) => {
-    if (running || accumulatedMs > 0) {
-      event.preventDefault();
-      event.returnValue = "";
-    }
-  });
-
-  initTheme();
+  /* ---------- start ---------- */
   renderSubjects();
-  updateTimerButtons();
-  updateTimerView();
-  renderRecent();
-  progressOpen = false;
-  els.layout.classList.remove("progress-open");
-  els.progressPanel.setAttribute("aria-hidden", "true");
-  els.progressToggle.setAttribute("aria-expanded", "false");
-  els.progressToggle.textContent = "Progress";
+  renderAll();
+  if (state.running) {
+    startTick();
+    tick(); // a pomodoro that ended while the page was closed is finished (and saved) now
+  }
 })();
