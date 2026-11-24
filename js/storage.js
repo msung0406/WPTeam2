@@ -352,6 +352,13 @@ const SD = (() => {
     return { ok: true, counts: Object.fromEntries(Object.entries(next).map(([k, v]) => [k, Array.isArray(v) ? v.length : 1])) };
   }
 
+  // delete every record (tasks, events, D-Days, Timer logs, planner settings, classes) + page UI state.
+  // Appearance (theme) is kept.
+  function clearAll() {
+    const keys = [...Object.values(KEYS), 'heatSubject', 'timerState'];
+    keys.forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } });
+  }
+
   /* =========================================================
      Change notifications from other tabs
      SD.onChange([SD.KEYS.tasks], () => render())
@@ -403,6 +410,6 @@ const SD = (() => {
     // calendar → tasks
     syncDeadlines,
     // backup
-    exportAll, importAll
+    exportAll, importAll, clearAll
   };
 })();

@@ -34,7 +34,7 @@
 .sd-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
 .sd-row {
   display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); gap: .65rem; align-items: start;
-  padding: .55rem .7rem; border-radius: 8px; background: var(--sd-bg); border-left: 3px solid var(--kind, var(--sd-line));
+  padding: .55rem .7rem; border-radius: var(--sd-radius-sm); background: var(--sd-bg); border-left: 3px solid var(--kind, var(--sd-line));
 }
 .sd-row-todo { --kind: var(--sd-low); }
 .sd-row-daily { --kind: var(--sd-mid); }
@@ -68,7 +68,7 @@ button.sd-row-title:hover, button.sd-row-title:focus-visible { color: var(--sd-a
 .sd-wstrip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .4rem; }
 .sd-wday {
   display: flex; flex-direction: column; gap: .3rem; min-width: 0; min-height: 8.5rem; padding: .5rem .45rem;
-  background: var(--sd-bg); border: 1px solid transparent; border-radius: 8px; color: var(--sd-ink); text-decoration: none;
+  background: var(--sd-bg); border: 1px solid transparent; border-radius: var(--sd-radius-sm); color: var(--sd-ink); text-decoration: none;
 }
 .sd-wday:hover, .sd-wday:focus-visible { border-color: var(--sd-accent-text); color: var(--sd-ink); }
 .sd-wday.is-today { background: var(--sd-surface); border-color: var(--sd-accent-text); box-shadow: inset 0 3px 0 var(--sd-accent); }

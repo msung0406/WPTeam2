@@ -11,7 +11,7 @@
 /* weekly availability picker */
 .sd-weekpick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; }
 .sd-avail {
-  display: grid; gap: .1rem; justify-items: center; padding: .35rem 0; border-radius: 8px; font-size: .72rem; line-height: 1.2;
+  display: grid; gap: .1rem; justify-items: center; padding: .35rem 0; border-radius: var(--sd-radius-sm); font-size: .72rem; line-height: 1.2;
   border: 1px solid var(--sd-line); background: var(--sd-surface); color: var(--sd-ink);
 }
 .sd-avail b { font-size: .8rem; }
@@ -94,7 +94,7 @@
 .sd-break-list { list-style: none; padding: 0; display: grid; gap: .35rem; }
 .sd-break-item {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .1rem .5rem; align-items: center;
-  background: var(--sd-bg); border-radius: 8px; padding: .45rem .6rem; font-size: .85rem;
+  background: var(--sd-bg); border-radius: var(--sd-radius-sm); padding: .45rem .6rem; font-size: .85rem;
 }
 .sd-break-when { font-weight: 500; font-variant-numeric: tabular-nums; }
 .sd-break-note { grid-column: 1; font-size: .78rem; color: var(--sd-muted); overflow-wrap: anywhere; }
@@ -102,7 +102,7 @@
 .sd-break-empty { font-size: .82rem; color: var(--sd-muted); }
 .sd-break-today {
   display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; margin-bottom: .6rem;
-  background: var(--sd-accent-soft); color: var(--sd-ink); border-radius: 8px; padding: .55rem .75rem; font-size: .88rem;
+  background: var(--sd-accent-soft); color: var(--sd-ink); border-radius: var(--sd-radius-sm); padding: .55rem .75rem; font-size: .88rem;
 }
 .sd-break-today .btn-link { color: var(--sd-accent-text); font-size: .85rem; text-decoration: none; }
 .sd-day.is-break { background: var(--sd-accent-soft); border-style: dashed; }

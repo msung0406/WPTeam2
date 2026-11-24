@@ -24,7 +24,7 @@
   display: flex; flex-direction: column; gap: 4px; min-width: 0; height: 6.4rem;
   padding: .4rem .3rem; text-align: left; overflow: hidden;
   background: var(--sd-surface); color: var(--sd-ink);
-  border: 1px solid transparent; border-radius: 8px;
+  border: 1px solid transparent; border-radius: var(--sd-radius-sm);
 }
 .sd-cal-day:hover { background: var(--sd-bg); }
 .sd-cal-day:focus-visible { outline: 2px solid var(--sd-accent-text); outline-offset: 1px; }
@@ -64,7 +64,7 @@
 .sd-day-items:empty { display: none; }
 .sd-day-item {
   display: flex; align-items: center; justify-content: space-between; gap: .5rem;
-  padding: .5rem .3rem .5rem .7rem; border-radius: 8px;
+  padding: .5rem .3rem .5rem .7rem; border-radius: var(--sd-radius-sm);
   background: var(--sd-bg); border-left: 3px solid var(--kind);
 }
 .sd-day-item.is-editing { outline: 2px solid var(--sd-accent-text); outline-offset: -1px; }

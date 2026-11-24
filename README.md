@@ -70,11 +70,15 @@ Views.renderWeekStrip(div, ctx);                            // 이번 주 (월~�
 const form = TodoForm.create(div, { plannerOnly, onSaved(msg, ymd) });  // form.edit(id) · form.reset(ymd) · form.setDate(ymd)
 ```
 
-## 테마
-- 색은 **style.css 맨 위 토큰 블록에만** 있음. 페이지 CSS에서는 `var(--sd-*)`만 사용 (hex 직접 쓰지 않기).
-- 기본: 중간보고서 색 (남색/주황)
-- 예전 파스텔 (Catppuccin Latte): `<html lang="ko" data-theme="latte">`
-- 확정되면 토큰 블록만 바꾸면 전 페이지 반영.
+## 테마 · 설정 (⚙ 오른쪽 위)
+- 모든 페이지 nav 오른쪽 끝에 ⚙ 버튼 → 설정 패널 (`js/settings.js`, 페이지마다 따로 만들 것 없음).
+  - 테마 14개: 라이트 7 (기본 · Latte · 숲 · 바다 · 벚꽃 · 모노 · Solarized) / 다크 7 (미드나잇 · Frappé · Mocha · Nord · Dracula · Gruvbox · Tokyo Night)
+  - 강조색 (추천 8색 + 직접 고르기, 테마 기본색으로 되돌리기) · 글자 크기 (작게/보통/크게) · 모서리 (각지게/보통/둥글게)
+  - 데이터: 백업 파일 내보내기/가져오기 (`SD.exportAll` / `SD.importAll`), 모든 데이터 지우기 (`SD.clearAll`, 두 번 눌러야 지워짐, 테마는 유지)
+- 모양 설정은 localStorage `appearance`에 브라우저별로 저장. `js/theme.js`가 `<head>`에서 (defer 없이) 먼저 적용 → 새로고침해도 기본색이 번쩍이지 않음. 다크 테마는 `data-bs-theme="dark"`도 켜서 Bootstrap 폼 · 경고창도 어둡게.
+- 색은 **style.css 맨 위 `[data-theme="…"]` 토큰 블록에만** 있음. 페이지 CSS에서는 `var(--sd-*)`만 사용 (hex 직접 쓰지 않기). 모서리도 `var(--sd-radius)` / `var(--sd-radius-sm)`.
+- 테마 추가: style.css에 토큰 블록 하나 + `js/theme.js`의 `THEMES`에 한 줄.
+- 새 페이지 `<head>`에 `<script src="js/theme.js"></script>`, 아래에 `<script src="js/settings.js" defer></script>` (storage.js 다음).
 
 ## 데이터 (storage.js v6)
 localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마다 쓰는 페이지는 하나.
