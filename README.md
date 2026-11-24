@@ -1,169 +1,96 @@
-# Study Dashboard — 웹프로그래밍 2팀
+# Study Dashboard
 
-## 페이지 (4개)
-| 페이지 | 파일 | 내용 |
-|---|---|---|
-| Dashboard | index.html · js/main.js · js/heatmap.js | 오늘 날짜 · 오늘 할 일 목록 · 오늘 공부 시간 · D-Day · 이번 주 달력 (일정 + 계획된 공부) · 공부 기록 잔디 (Timer, 1월 1일부터, 전체/과목별) · 과목 관리 |
-| Calendar · Todo | calendar.html · js/calendar.js | 월 달력 (일정 · 마감 · 할 일 · 공부) · 날짜 클릭 → 일정/할 일 수정 + 그날 목록 · 할 일 추가 (할 일 / 매일 할 일) |
-| Planner | planner.html · js/planner-page.js | 마지막 마감까지 계획 (주간 계획 / 계획된 할 일) · 계획 수정 (Calendar · Todo에서 온 것만) · 플래너 설정 · 쉬는 날 |
-| Timer | timer.html · js/timer.js | 스톱워치 · 뽀모도로 → studyLogs |
+마감과 시험을 넣으면 **매일 무엇을 몇 시간 공부할지 알아서 짜 주는** 학습 관리 웹사이트.
+웹프로그래밍 (2026-2) 2팀 프로젝트 · HTML · CSS · JavaScript · Bootstrap 5 · 서버 없음
 
-Progress 페이지와 따로 있던 Dashboard 페이지는 없앰 (Main을 Dashboard로 바꾸고 잔디를 합침). 캘린더 구독(Google 등)은 브라우저만으로는 CORS 때문에 불가 → 향후 기능.
+![Dashboard](assets/screenshots/dashboard.png)
 
-## 폴더 구조
-```
-study-dashboard/
-├── index.html (Dashboard)  calendar.html  planner.html  timer.html
-├── css/
-│   ├── style.css        공통 (테마 토큰 · Bootstrap 연결 · 공통 Header)
-│   ├── components.css   공통 부품 (하루 목록 · 이번 주 · 할 일 폼) — Dashboard · Calendar · Planner (+ Timer: 과목 칸)
-│   ├── responsive.css   공통 반응형 (마지막에 로드)
-│   └── <page>.css       페이지 전용
-├── js/
-│   ├── storage.js       공통 데이터 레이어 (모든 페이지 필수)
-│   ├── planner.js       플래너 알고리즘 (순수 함수, 저장 안 함)
-│   ├── views.js         공통: 하루 목록 · 이번 주 (Dashboard 오늘 = Calendar의 오늘과 같은 목록)
-│   ├── todoform.js      공통: 할 일 폼 ("플래너에 추가" 스위치)
-│   ├── stats.js         공통: 읽기 전용 요약 (분 → "1시간 5분" 등)
-│   ├── heatmap.js       Dashboard: Timer 잔디 (Heatmap.render)
-│   └── <page>.js        페이지 전용
-└── tests/run.js         node tests/run.js
-```
-페이지 전용 CSS를 따로 두는 이유: 4명이 style.css 하나를 동시에 고치면 충돌남.
+## 주요 기능
 
-## 페이지 기본 틀 (planner.html 참고)
-```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/components.css">   <!-- 하루 목록 · 이번 주 · 폼을 쓰는 페이지만 -->
-<link rel="stylesheet" href="css/<page>.css">
-<link rel="stylesheet" href="css/responsive.css">
-...
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-<script src="js/storage.js" defer></script>
-<script src="js/planner.js" defer></script>    <!-- 계획이 필요한 페이지만 -->
-<script src="js/views.js" defer></script>      <!-- 하루 목록 · 이번 주 -->
-<script src="js/todoform.js" defer></script>   <!-- 할 일 폼 -->
-<script src="js/<page>.js" defer></script>
-```
-Header/Navigation은 아무 페이지의 `<nav>` 블록을 그대로 복사하고 `active` + `aria-current="page"`만 옮기면 됨.
-메뉴 순서: Dashboard · Calendar · Todo · Planner · Timer.
+- **자동 학습 계획** — 할 일에 작업량(1~5)만 고르면 플래너가 마감 전에 공부 세션을 나눠서 배치. 시험은 가까워질수록 길게, 놓친 공부는 다음 날 보충.
+- **캘린더 마감 → 계획 자동 연결** — Calendar에 시험 · 과제 마감을 넣으면 플래너에 바로 들어감.
+- **시험 공부 방식 선택** — 골고루 (하루에 여러 과목) 또는 하루 한 과목 (예: 알고리즘 → 웹프 → CC 번갈아).
+- **할 일 · 매일 할 일** — 그날만 하는 할 일, 매일 반복하는 할 일 (날마다 체크).
+- **내 일주일 · 쉬는 날** — 요일별로 짧게 / 길게 / 쉼, 특정 날짜 쉬기 → 계획이 알아서 비켜 감.
+- **Timer + 공부 잔디** — 스톱워치 · 뽀모도로로 공부 시간 기록, 1월 1일부터 GitHub 잔디처럼 표시 (전체 / 과목별).
+- **테마 14개 + 꾸미기** — 라이트 7 · 다크 7, 강조색 · 글자 크기 · 모서리. 백업 파일 내보내기 / 가져오기.
+- **반응형** — 휴대폰에서도 같은 기능.
 
-## 할 일 = 세 종류 (v5 `task.planned`, v6 `task.repeat`)
-- **그냥 할 일** (`planned: false`): 그 날짜에만 보임. Calendar · Todo의 폼 기본값, Dashboard의 빠른 추가.
-- **계획된 할 일** (`planned: true`): 폼에서 "플래너에 추가"를 켜면 종류 · 작업량 · 세부 조정이 나오고, 플래너가 마감 전에 공부 세션을 나눠 잡음. 세션은 Calendar · Dashboard 이번 주 · Dashboard 오늘 목록에 보임.
-- **매일 할 일** (`repeat: "daily"`): 시작일(`date`)부터 매일 목록에 나옴. 날마다 체크 (`doneDates`, `SD.toggleDaily(id, ymd, done)`). 미래 날짜는 체크 불가, 플래너에 안 들어감, 달력 칸에는 표시 안 함 (목록에만).
-- 캘린더 마감(`kind: "deadline"`)에서 온 할 일은 항상 계획됨. 예전 데이터(플래그 없음)도 계획됨으로 읽음.
-- **할 일을 만드는 곳은 Calendar · Todo뿐.** Planner는 거기서 온 계획된 할 일만 수정 (작업량 · 세부 조정 등). 새로 만들거나 삭제는 못 하고, "플래너에서 빼기" = 그냥 할 일로 돌아감.
+## 화면
 
-## 과목 = 내 과목 (v6, 키 `subjects`)
-- 처음엔 비어 있음. Dashboard 공부 기록 카드의 '과목 관리'에서 추가/삭제, 또는 과목 칸(할 일 · 일정 · Timer)에서 "+ 새 과목…".
-- `SD.getSubjects()` · `SD.addSubject(name)` · `SD.removeSubject(name)` · 과목 칸은 `Views.subjectPicker(select)`.
-- 과목 없음 = `''` (예전 '기타'도 `''`로 읽음). 과목을 삭제해도 할 일 · 기록의 과목 글자는 남고, 잔디의 과목 선택에서만 빠짐 (전체에는 계속 포함).
-
-공통 부품
-```js
-const ctx = Views.load();                                   // { today, tasks, active, events, settings, plan, ddays }
-Views.renderDayList(ul, ymd, ctx, { onEdit, plannedOnly, finish });   // 하루 목록 (할 일 · 마감 · 공부 세션)
-Views.bindDayList(ul, () => ctx, render, { onEdit });       // 체크 → SD.setCompleted / SD.toggleSession
-Views.renderWeekStrip(div, ctx);                            // 이번 주 (월~일), 날짜 클릭 → calendar.html?date=
-const form = TodoForm.create(div, { plannerOnly, onSaved(msg, ymd) });  // form.edit(id) · form.reset(ymd) · form.setDate(ymd)
-```
-
-## 테마 · 설정 (⚙ 오른쪽 위)
-- 모든 페이지 nav 오른쪽 끝에 ⚙ 버튼 → 설정 패널 (`js/settings.js`, 페이지마다 따로 만들 것 없음).
-  - 테마 14개: 라이트 7 (기본 · Latte · 숲 · 바다 · 벚꽃 · 모노 · Solarized) / 다크 7 (미드나잇 · Frappé · Mocha · Nord · Dracula · Gruvbox · Tokyo Night)
-  - 강조색 (추천 8색 + 직접 고르기, 테마 기본색으로 되돌리기) · 글자 크기 (작게/보통/크게) · 모서리 (각지게/보통/둥글게)
-  - 데이터: 백업 파일 내보내기/가져오기 (`SD.exportAll` / `SD.importAll`), 모든 데이터 지우기 (`SD.clearAll`, 두 번 눌러야 지워짐, 테마는 유지)
-- 모양 설정은 localStorage `appearance`에 브라우저별로 저장. `js/theme.js`가 `<head>`에서 (defer 없이) 먼저 적용 → 새로고침해도 기본색이 번쩍이지 않음. 다크 테마는 `data-bs-theme="dark"`도 켜서 Bootstrap 폼 · 경고창도 어둡게.
-- 색은 **style.css 맨 위 `[data-theme="…"]` 토큰 블록에만** 있음. 페이지 CSS에서는 `var(--sd-*)`만 사용 (hex 직접 쓰지 않기). 모서리도 `var(--sd-radius)` / `var(--sd-radius-sm)`.
-- 테마 추가: style.css에 토큰 블록 하나 + `js/theme.js`의 `THEMES`에 한 줄.
-- 새 페이지 `<head>`에 `<script src="js/theme.js"></script>`, 아래에 `<script src="js/settings.js" defer></script>` (storage.js 다음).
-
-## 데이터 (storage.js v6)
-localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마다 쓰는 페이지는 하나.
-**예상 시간 입력은 없음** — 할 일은 작업량 1~5로 표시하고, 플래너가 마감일 전에 몇 시간짜리 세션을 배치함 (시험은 점점 길게).
-스키마·알고리즘 전체: `system-design.html` 2~5절.
-
-| 키 | 쓰기 | 읽기 | 쓰기 함수 |
-|---|---|---|---|
-| tasks | Calendar · Todo · Planner (TodoForm) | `SD.getTasks()` (보관 포함) · `SD.activeTasks()` (화면용) | `SD.saveTasks(arr)` |
-| events | Calendar | `SD.getEvents()` · `SD.eventsOn(ymd)` · `SD.hasScheduleOn(ymd)` | `SD.saveEvents(arr)` |
-| ddays | Calendar | `SD.getDdays()` · `SD.allDdays()` (마감 D-Day 포함) | `SD.saveDdays(arr)` |
-| studyLogs | Timer | `SD.getStudyLogs()` | `SD.addStudyLog({ subject, minutes, taskId })` |
-| settings | Planner | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly, examStyle })` |
-| subjects | 어디서나 (과목 칸 · Dashboard 과목 관리) | `SD.getSubjects()` | `SD.addSubject(name)` · `SD.removeSubject(name)` |
-
-다른 페이지에서 할 일 상태 바꿀 때 (tasks에 직접 쓰지 말 것)
-| 상황 | 호출 |
+| Calendar · Todo | Planner |
 |---|---|
-| Dashboard에서 오늘 세션 체크/해제 | `SD.toggleSession(taskId, SD.date.today(), true, hours)` / `(…, false)` |
-| 할 일 전체 완료/되돌리기 | `SD.setCompleted(taskId, true/false)` |
+| ![Calendar · Todo](assets/screenshots/calendar.png) | ![Planner](assets/screenshots/planner.png) |
+| 월 달력에 일정 · 마감 · 할 일 · 계획된 공부. 날짜를 누르면 그날을 보고 고칠 수 있음. | 마지막 마감까지의 계획, 주간 보기, 내 일주일 · 쉬는 날 · 시험 공부 방식 설정. |
 
-오늘의 계획 (Dashboard 등에서)
-```js
-const items = Planner.planDay({ tasks: SD.getTasks(), events: SD.getEvents(), settings: SD.getSettings(), today: SD.date.today() });
-// [{ taskId, title, type, size, block: "h" | "day", hours, label: "3시간" | "종일", reason: "plan" | "catchup" | "due" | "overdue" | "fallback" | "early", done, checked }]
-// 표시용: item.label, Planner.REASON_LABEL[reason] → "보충"
-// 전체 (오늘 ~ 마지막 마감, 최소 14일 · 최대 120일): Planner.plan({...}).days["2026-11-14"]
+| Timer | 설정 (⚙) |
+|---|---|
+| ![Timer](assets/screenshots/timer.png) | ![Settings](assets/screenshots/settings.png) |
+
+| 테마 (Latte · Nord · Dracula · Gruvbox) | 휴대폰 |
+|---|---|
+| ![Themes](assets/screenshots/themes.png) | ![Mobile](assets/screenshots/mobile.png) |
+
+## 실행 방법
+
+설치할 것 없음. 정적 파일만 있으면 됨 (Bootstrap · 글꼴은 CDN).
+
+```bash
+git clone https://github.com/msung0406/WPTeam2.git
+cd WPTeam2
+python3 -m http.server 8000      # 또는 VS Code Live Server
+```
+브라우저에서 `http://localhost:8000` 열기. 처음엔 비어 있음 → Planner의 **예시 데이터 불러오기**로 둘러볼 수 있음.
+
+GitHub Pages로 그대로 배포 가능 (Settings → Pages → 브랜치 선택).
+
+## 기술 스택
+
+| 분류 | 사용 |
+|---|---|
+| 화면 | HTML5 · CSS3 (CSS 변수로 테마) · Bootstrap 5.3 · IBM Plex Sans KR |
+| 동작 | JavaScript (ES2020, 빌드 도구 없음) |
+| 저장 | 브라우저 localStorage (서버 · 로그인 없음, 백업은 JSON 파일) |
+| 테스트 | Node.js 단위 테스트 (`node tests/run.js`) |
+
+## 구조
+
+```
+index.html       Dashboard — 오늘 할 일 · 공부 시간 · 이번 주 · 공부 잔디
+calendar.html    Calendar · Todo — 달력 · 일정 · 할 일 추가
+planner.html     Planner — 학습 계획 · 플래너 설정 · 쉬는 날
+timer.html       Timer — 스톱워치 · 뽀모도로
+css/             style.css (테마 토큰 · 공통) · components.css · 페이지별 CSS
+js/              storage.js (데이터) · planner.js (계획 알고리즘) · views.js · todoform.js · 페이지별 JS
+tests/run.js     storage · planner 단위 테스트
+docs/            개발 가이드
 ```
 
-Calendar 마감 → 계획된 할 일: `kind: "deadline"`으로 events에 저장하면 storage.js가 페이지 로드 시 자동으로 연결된 task를 만듦 (`SD.syncDeadlines()`). Calendar는 tasks에 쓰지 않음.
+## 어떻게 동작하나
 
-events 형식
-```js
-{ id, kind: "schedule", title: "동아리 MT", date: "2026-11-14", start: "10:00", end: "18:00" }  // 시간은 선택, 표시용. 일정 있는 주말엔 종일 세션 안 잡음
-{ id, kind: "deadline", title: "자율주행 퀴즈 3", date: "2026-11-16", type: "exam" | "project" | "assignment" | "general",
-  subject: "자료구조" /* 내 과목, 없으면 "" */, size: 4 /* 1~5, 비우면 종류별 기본값 */, priority: "high", showDday: true }
-```
+1. 모든 페이지는 `js/storage.js`(`SD`)를 통해서만 데이터를 읽고 씀 → 한 페이지에서 바꾸면 다른 페이지 · 다른 탭에도 바로 반영.
+2. `js/planner.js`는 저장하지 않는 순수 함수. 할 일 · 일정 · 설정을 받아 오늘부터 마지막 마감까지 날짜별 세션을 계산하고, 화면이 열릴 때마다 다시 계산.
+3. 시간을 직접 입력하지 않음 — 작업량 1~5와 종류(과제 · 시험 · 프로젝트)가 패턴을 정하고, 실제로 체크한 시간으로 다음 시험 계획을 보정.
 
-tasks 형식
-```js
-{ id, title, subject, date: "2026-11-16", priority: "high" | "mid" | "low",
-  type: "exam" | "project" | "assignment" | "general", size: 4, completed: false,
-  planned: true, createdAt: "2026-11-09", sessions: [{ date: "2026-11-10", hours: 2 }], plan: null /* or { window, short, long, hours, early } */, sourceEventId: null, archived: false }
-```
+자세한 데이터 형식 · 플래너 규칙 · 코드 규칙: **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**
 
-작업량 1~5 = 기본 패턴 (종류 선택 시 기본값: 일반 2 · 과제 3 · 시험 4 · 프로젝트 5). 할 일마다 "세부 조정"으로 변경 가능 (`task.plan`).
+## 팀
 
-과제·프로젝트·일반 (마감 전에 나눠서)
-| 작업량 | 시작 | 세션 | 종일 |
-|---|---|---|---|
-| 1 | 마감일 | 30분 × 1 | 0 |
-| 2 | 2일 전 | 1시간 × 1 | 0 |
-| 3 | 4일 전 | 1시간 × 2 | 0 |
-| 4 | 7일 전 | 1시간 × 2 | 1 |
-| 5 | 14일 전 | 2시간 × 6 | 2 |
+| 이름 | GitHub | 맡은 부분 |
+|---|---|---|
+| 김주환 | [@Zoenya](https://github.com/Zoenya) | Todo · Planner, 데이터 레이어(storage.js), 플래너 알고리즘, 공통 부품, 테마 · 설정 |
+| 김지환 | [@jihwan2da](https://github.com/jihwan2da) | Main · Dashboard, 통합(integration) |
+| 김도형 | [@ehgudrla](https://github.com/ehgudrla) | Calendar · D-Day |
+| 김민성 | [@msung0406](https://github.com/msung0406) | Timer, 저장소 관리 |
 
-시험 (시험 전 매일, 시험에 가까울수록 길게)
-| 작업량 | 공부할 날 | 하루 시간 | 종일 | 합계 |
-|---|---|---|---|---|
-| 1 | 1 | 1시간 | – | 1시간 |
-| 2 | 2 | 1→2시간 | – | 3시간 |
-| 3 | 3 | 2→3시간 | – | 8시간 |
-| 4 | 5 | 2→4시간 | 1 | 약 20시간 |
-| 5 | 12 | 2→4시간 | 1 | 약 41시간 |
+## 앞으로
 
-- 요일은 **설정의 "내 일주일"** (`settings.week`: `off` 쉼 / `short` 짧게 / `long` 길게)이 결정. 종일은 마감·시험에 가장 가까운 길게 요일.
-- **쉬는 날** (`settings.restDays` + 메모 `settings.restNotes`): 특정 날짜는 아무것도 계획하지 않음. Planner 페이지의 '쉬는 날' 카드, 주간 계획의 '쉬기' 버튼으로 설정. 매주 반복 패턴은 '내 일주일'.
-- **계획 범위:** 오늘부터 가장 늦은 마감까지 (최소 14일, 최대 120일). 그래서 달력에서 3~4주 뒤 시험 전날까지 공부가 보임.
-- **다른 시험이 있는 날:** 종일로 잡지 않고, 짧게 날 한도까지만 공부.
-- 하루 한도: 짧게 날 `settings.shortDayHours` (기본 4시간), 종일 = `settings.longDayHours` (기본 8시간). 넘치면 앞날로 나눠 배치, 그래도 안 되면 경고.
-- **시험 공부 방식** (`settings.examStyle`, 플래너 설정): `mix` 골고루 (기본, 아래 규칙대로 · 하루에 여러 과목 가능) / `single` 하루 한 과목 = 하루를 통째로 한 시험에 씀. 시험마다 남은 총 시간은 그대로, 마지막 날부터 거꾸로 '남은 시간 ÷ 남은 날'이 가장 큰 시험에 하루씩 배정 → 번갈아 공부, 시험 전날은 항상 그 시험. 이 모드에선 '미리' 없음.
-- **시험은 하나씩 (골고루일 때):** 앞 시험이 끝나기 전엔 다음 시험 공부를 시작하지 않음. 남은 날이 적으면 같은 총 시간을 그 날들에 몰아서 배치하고, 그래도 안 들어가면 앞 시험 전 날에 일부 배치.
-- **여유 있으면 미리 시작:** 시험 공부 기간 전에 이틀에 한 번 1시간 "미리" 세션 (작업량 3: 7일, 4: 14일, 5: 21일 전부터). 빈 시간에만 들어가고, 건너뛰어도 보충 없음. 해 두면 마지막 날들 시간이 줄어듦. 설정 `settings.startEarly`, 할 일별 `plan.early`.
-- **과목별 학습 기록:** 완료한 시험의 실제 공부 시간 ÷ 계획 시간 평균(0.5~2배)을 같은 과목 다음 시험 시간에 곱함. 실제 시간 = 오늘의 계획에서 체크한 시간.
+- 구글 캘린더 등 **캘린더 구독** — 브라우저만으로는 다른 사이트의 일정을 가져올 수 없어서(CORS) 서버가 필요
+- 로그인 · 여러 기기 동기화
+- 공부 기록을 바탕으로 계획을 더 똑똑하게 (AI 플래너)
 
-기타
-- `SD.TYPES` / `SD.TYPE_LABEL` · `SD.SIZES` / `SD.SIZE_LABEL` · `SD.PRIORITY_LABEL`
-- 오른쪽 위 오늘 날짜: 헤더에 `<p class="sd-today mb-0" id="todayLabel"></p>`만 두면 storage.js가 채움 (`SD.date.label(ymd)` → "2026년 11월 24일 (화)")
-- `SD.date.today()` · `.addDays(ymd, n)` · `.diff(a, b)` · `.parse(ymd)` · `.toYMD(date)` · `.dow(ymd)`
-- `SD.hoursOn(task, ymd)` · `SD.totalHours(task)` 공부한 시간
-- `SD.newId()` id 생성 · `SD.onChange([SD.KEYS.tasks], fn)` 다른 탭 변경 감지
-- `SD.exportAll()` / `SD.importAll(obj)` 백업 JSON
-- 테스트: `node tests/run.js` (storage.js · planner.js 수정 후 꼭 실행)
+## 크레딧
 
-주의
-- `new Date().toISOString().slice(0,10)` 쓰지 말 것 → UTC라 한국 시간 오전 9시 전엔 하루 전 날짜가 나옴. `SD.date.today()` 사용.
-- 사용자가 입력한 텍스트는 `textContent`로 출력 (`innerHTML` 금지 — 제목에 HTML이 들어가면 그대로 실행됨).
-- 다른 탭에서 데이터가 바뀌면 `storage` 이벤트로 갱신 가능 (`SD.onChange`, 각 페이지 js 하단 참고).
+- [Bootstrap](https://getbootstrap.com) (MIT) · [IBM Plex Sans KR](https://github.com/IBM/plex) (OFL)
+- 테마 색: [Catppuccin](https://catppuccin.com) (Latte · Frappé · Mocha), [Nord](https://www.nordtheme.com), [Dracula](https://draculatheme.com), [Gruvbox](https://github.com/morhetz/gruvbox), [Solarized](https://ethanschoonover.com/solarized/), [Tokyo Night](https://github.com/folke/tokyonight.nvim)
+- 개발 과정에서 생성형 AI(Claude)의 도움을 받았음.
