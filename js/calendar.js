@@ -1,7 +1,7 @@
 /* =========================================================
    Calendar · Todo — calendar.html
    Month grid: events, D-Days, to-dos and planned study sessions.
-   Click a day → its events (edit / delete) + its day list (same list as Main).
+   Click a day → its events (edit / delete) + its day list (same list as Dashboard).
    Writes: events + ddays here; tasks through TodoForm / Views.
    Deadlines become planned tasks through SD.syncDeadlines().
    Maintainers: 김도형 (calendar), 김주환 (todo)
@@ -544,7 +544,7 @@
   $("#nextMonth").addEventListener("click", () => changeMonth(1));
   $("#todayBtn").addEventListener("click", () => selectDate(D.today()));
 
-  // Other tabs (Planner, Main, another Calendar) → redraw. Focus also catches a date change overnight.
+  // Other tabs (Planner, Dashboard, another Calendar) → redraw. Focus also catches a date change overnight.
   SD.onChange(
     [SD.KEYS.events, SD.KEYS.ddays, SD.KEYS.tasks, SD.KEYS.settings],
     () => render(),

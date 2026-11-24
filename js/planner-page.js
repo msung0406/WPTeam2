@@ -5,7 +5,7 @@
    Form: TodoForm (plannerOnly + editOnly) — the Planner only edits tasks that came from
          Calendar · Todo ("플래너에 추가" on, or a Calendar deadline). It can't create or delete;
          "플래너에서 빼기" turns a task back into a plain to-do.
-   Today's list: Views (same rows as Main)
+   Today's list: Views (same rows as Dashboard)
    Writes: tasks (through TodoForm / Views / setCompleted), settings.
    ========================================================= */
 (() => {
@@ -378,7 +378,7 @@
     render('예시 데이터를 불러왔습니다.');
   });
 
-  /* ---------- other tabs (Calendar, Main) changed data → refresh ---------- */
+  /* ---------- other tabs (Calendar, Dashboard) changed data → refresh ---------- */
   SD.onChange([SD.KEYS.tasks, SD.KEYS.events, SD.KEYS.settings], () => render());
 
   /* ---------- init ---------- */

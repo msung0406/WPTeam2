@@ -1,31 +1,31 @@
 # Study Dashboard — 웹프로그래밍 2팀
 
-## 페이지 (5개)
+## 페이지 (4개)
 | 페이지 | 파일 | 내용 |
 |---|---|---|
-| Main | index.html · js/main.js | 오늘 날짜 · 오늘 할 일 목록 · 오늘 공부 시간 · 이번 주 달력 (일정 + 계획된 공부) |
-| Dashboard | dashboard.html · js/dashboard.js | 내 과목 추가/삭제 · 1월 1일부터 과목별 GitHub 잔디 · 기준 전환 (Timer 기록 / 계획 체크) |
+| Dashboard | index.html · js/main.js · js/heatmap.js | 오늘 날짜 · 오늘 할 일 목록 · 오늘 공부 시간 · D-Day · 이번 주 달력 (일정 + 계획된 공부) · 공부 기록 잔디 (Timer, 1월 1일부터, 전체/과목별) · 과목 관리 |
 | Calendar · Todo | calendar.html · js/calendar.js | 월 달력 (일정 · 마감 · 할 일 · 공부) · 날짜 클릭 → 일정/할 일 수정 + 그날 목록 · 할 일 추가 (할 일 / 매일 할 일) |
 | Planner | planner.html · js/planner-page.js | 앞으로 14일 계획 (주간 계획 / 계획된 할 일) · 계획 수정 (Calendar · Todo에서 온 것만) · 플래너 설정 · 쉬는 날 |
 | Timer | timer.html · js/timer.js | 스톱워치 · 뽀모도로 → studyLogs |
 
-Progress 페이지는 없앰 (내용은 Dashboard · Main으로). 캘린더 구독(Google 등)은 브라우저만으로는 CORS 때문에 불가 → 향후 기능.
+Progress 페이지와 따로 있던 Dashboard 페이지는 없앰 (Main을 Dashboard로 바꾸고 잔디를 합침). 캘린더 구독(Google 등)은 브라우저만으로는 CORS 때문에 불가 → 향후 기능.
 
 ## 폴더 구조
 ```
 study-dashboard/
-├── index.html  dashboard.html  calendar.html  planner.html  timer.html
+├── index.html (Dashboard)  calendar.html  planner.html  timer.html
 ├── css/
 │   ├── style.css        공통 (테마 토큰 · Bootstrap 연결 · 공통 Header)
-│   ├── components.css   공통 부품 (하루 목록 · 이번 주 · 할 일 폼) — Main · Calendar · Planner
+│   ├── components.css   공통 부품 (하루 목록 · 이번 주 · 할 일 폼) — Dashboard · Calendar · Planner (+ Timer: 과목 칸)
 │   ├── responsive.css   공통 반응형 (마지막에 로드)
 │   └── <page>.css       페이지 전용
 ├── js/
 │   ├── storage.js       공통 데이터 레이어 (모든 페이지 필수)
 │   ├── planner.js       플래너 알고리즘 (순수 함수, 저장 안 함)
-│   ├── views.js         공통: 하루 목록 · 이번 주 (Main = Calendar의 오늘과 같은 목록)
+│   ├── views.js         공통: 하루 목록 · 이번 주 (Dashboard 오늘 = Calendar의 오늘과 같은 목록)
 │   ├── todoform.js      공통: 할 일 폼 ("플래너에 추가" 스위치)
 │   ├── stats.js         공통: 읽기 전용 요약 (분 → "1시간 5분" 등)
+│   ├── heatmap.js       Dashboard: Timer 잔디 (Heatmap.render)
 │   └── <page>.js        페이지 전용
 └── tests/run.js         node tests/run.js
 ```
@@ -47,19 +47,19 @@ study-dashboard/
 <script src="js/<page>.js" defer></script>
 ```
 Header/Navigation은 아무 페이지의 `<nav>` 블록을 그대로 복사하고 `active` + `aria-current="page"`만 옮기면 됨.
-메뉴 순서: Main · Dashboard · Calendar · Todo · Planner · Timer.
+메뉴 순서: Dashboard · Calendar · Todo · Planner · Timer.
 
 ## 할 일 = 세 종류 (v5 `task.planned`, v6 `task.repeat`)
-- **그냥 할 일** (`planned: false`): 그 날짜에만 보임. Calendar · Todo의 폼 기본값, Main의 빠른 추가.
-- **계획된 할 일** (`planned: true`): 폼에서 "플래너에 추가"를 켜면 종류 · 작업량 · 세부 조정이 나오고, 플래너가 마감 전에 공부 세션을 나눠 잡음. 세션은 Calendar · Main 이번 주 · Main 오늘 목록에 보임.
+- **그냥 할 일** (`planned: false`): 그 날짜에만 보임. Calendar · Todo의 폼 기본값, Dashboard의 빠른 추가.
+- **계획된 할 일** (`planned: true`): 폼에서 "플래너에 추가"를 켜면 종류 · 작업량 · 세부 조정이 나오고, 플래너가 마감 전에 공부 세션을 나눠 잡음. 세션은 Calendar · Dashboard 이번 주 · Dashboard 오늘 목록에 보임.
 - **매일 할 일** (`repeat: "daily"`): 시작일(`date`)부터 매일 목록에 나옴. 날마다 체크 (`doneDates`, `SD.toggleDaily(id, ymd, done)`). 미래 날짜는 체크 불가, 플래너에 안 들어감, 달력 칸에는 표시 안 함 (목록에만).
 - 캘린더 마감(`kind: "deadline"`)에서 온 할 일은 항상 계획됨. 예전 데이터(플래그 없음)도 계획됨으로 읽음.
 - **할 일을 만드는 곳은 Calendar · Todo뿐.** Planner는 거기서 온 계획된 할 일만 수정 (작업량 · 세부 조정 등). 새로 만들거나 삭제는 못 하고, "플래너에서 빼기" = 그냥 할 일로 돌아감.
 
 ## 과목 = 내 과목 (v6, 키 `subjects`)
-- 처음엔 비어 있음. Dashboard의 '내 과목'에서 추가/삭제, 또는 과목 칸(할 일 · 일정 · Timer)에서 "+ 새 과목…".
+- 처음엔 비어 있음. Dashboard 공부 기록 카드의 '과목 관리'에서 추가/삭제, 또는 과목 칸(할 일 · 일정 · Timer)에서 "+ 새 과목…".
 - `SD.getSubjects()` · `SD.addSubject(name)` · `SD.removeSubject(name)` · 과목 칸은 `Views.subjectPicker(select)`.
-- 과목 없음 = `''` (예전 '기타'도 `''`로 읽음). 과목을 삭제해도 할 일 · 기록의 과목 글자는 남고, 잔디만 사라짐.
+- 과목 없음 = `''` (예전 '기타'도 `''`로 읽음). 과목을 삭제해도 할 일 · 기록의 과목 글자는 남고, 잔디의 과목 선택에서만 빠짐 (전체에는 계속 포함).
 
 공통 부품
 ```js
@@ -87,16 +87,16 @@ localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마�
 | events | Calendar | `SD.getEvents()` · `SD.eventsOn(ymd)` · `SD.hasScheduleOn(ymd)` | `SD.saveEvents(arr)` |
 | ddays | Calendar | `SD.getDdays()` · `SD.allDdays()` (마감 D-Day 포함) | `SD.saveDdays(arr)` |
 | studyLogs | Timer | `SD.getStudyLogs()` | `SD.addStudyLog({ subject, minutes, taskId })` |
-| settings | Planner |
-| subjects | 어디서나 (과목 칸 · Dashboard) | `SD.getSubjects()` | `SD.addSubject(name)` · `SD.removeSubject(name)` | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly })` |
+| settings | Planner | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly })` |
+| subjects | 어디서나 (과목 칸 · Dashboard 과목 관리) | `SD.getSubjects()` | `SD.addSubject(name)` · `SD.removeSubject(name)` |
 
 다른 페이지에서 할 일 상태 바꿀 때 (tasks에 직접 쓰지 말 것)
 | 상황 | 호출 |
 |---|---|
-| Main에서 오늘 세션 체크/해제 | `SD.toggleSession(taskId, SD.date.today(), true, hours)` / `(…, false)` |
+| Dashboard에서 오늘 세션 체크/해제 | `SD.toggleSession(taskId, SD.date.today(), true, hours)` / `(…, false)` |
 | 할 일 전체 완료/되돌리기 | `SD.setCompleted(taskId, true/false)` |
 
-오늘의 계획 (Main 등에서)
+오늘의 계획 (Dashboard 등에서)
 ```js
 const items = Planner.planDay({ tasks: SD.getTasks(), events: SD.getEvents(), settings: SD.getSettings(), today: SD.date.today() });
 // [{ taskId, title, type, size, block: "h" | "day", hours, label: "3시간" | "종일", reason: "plan" | "catchup" | "due" | "overdue" | "fallback" | "early", done, checked }]

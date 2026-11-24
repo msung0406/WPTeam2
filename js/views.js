@@ -2,7 +2,7 @@
    Study Dashboard — shared views (load after storage.js + planner.js)
    One "day list" and one "week strip" used by several pages, so a day
    looks the same everywhere:
-     Main            → today's list + this week
+     Dashboard       → today's list + this week
      Calendar · Todo → the clicked day's list
      Planner         → today's list (planned only)
    Writes only through SD.setCompleted / SD.toggleSession.
@@ -67,7 +67,7 @@ const Views = (() => {
     return rows;
   }
 
-  // progress of a day's list (Main header + stat)
+  // progress of a day's list (Dashboard header + stat)
   function dayProgress(rows) {
     const doable = rows.filter(r => r.kind !== 'studied' && !((r.kind === 'session' || r.kind === 'daily') && !r.canTick));
     return { done: doable.filter(r => r.checked).length, total: doable.length };

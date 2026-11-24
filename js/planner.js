@@ -4,7 +4,7 @@
      Planner.plan({ tasks, events, settings, today }) → { days, overflow }
      Planner.planDay(...) → today's items only
    Only tasks with planned !== false are scheduled (plain to-dos are skipped).
-   Used by Planner (full UI), Calendar · Todo and Main (day lists).
+   Used by Planner (full UI), Calendar · Todo and Dashboard (day lists).
    Maintainer: 김주환
    ========================================================= */
 const Planner = (() => {

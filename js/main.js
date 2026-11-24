@@ -1,7 +1,9 @@
 /* =========================================================
-   Main — today: to-do list, study time, this week
+   Dashboard (index.html) — today: to-do list, study time, this week, Timer heatmap
    Today's list = the same list as today on Calendar · Todo (js/views.js).
-   Writes: tasks only through SD.newTodo / Views (setCompleted, toggleSession).
+   Heatmap = Timer logs from Jan 1 (js/heatmap.js), all classes or one class.
+   Writes: tasks only through SD.newTodo / Views (setCompleted, toggleSession);
+           subjects (과목 관리: SD.addSubject / SD.removeSubject).
    Maintainer: 김지환
    ========================================================= */
 (() => {
@@ -95,6 +97,89 @@
     );
   }
 
+  /* ---------- Timer heatmap + 과목 관리 ---------- */
+  let heatSubject = "";
+  try {
+    heatSubject = localStorage.getItem("heatSubject") || "";
+  } catch (e) {}
+
+  function renderHeat() {
+    const subjects = SD.getSubjects();
+    if (heatSubject && !subjects.includes(heatSubject)) heatSubject = "";
+    const sel = $("#heatSubject");
+    sel.replaceChildren(
+      new Option("전체", ""),
+      ...subjects.map((s) => new Option(s, s)),
+    );
+    sel.value = heatSubject;
+    const r = Heatmap.render($("#heatGrid"), { subject: heatSubject });
+    $("#heatYear").textContent = `Timer · ${r.year}년 1월 1일부터`;
+    const sum = $("#heatSummary");
+    sum.replaceChildren();
+    if (!r.days) {
+      sum.textContent = heatSubject
+        ? `${heatSubject}: 올해 Timer 기록이 아직 없어요.`
+        : "올해 Timer 기록이 아직 없어요. Timer로 공부하면 하루 한 칸씩 채워져요.";
+      return;
+    }
+    const b = (t) => make("b", "", t);
+    sum.append(
+      `${heatSubject || "전체"} · 올해 `,
+      b(Stats.formatMinutes(r.total)),
+      " · ",
+      b(`${r.days}일`),
+      " 공부 · 연속 ",
+      b(`${r.current}일`),
+      r.best ? ` (최고 ${r.best}일)` : "",
+    );
+  }
+
+  function renderSubjects() {
+    $("#subjectList").replaceChildren(
+      ...SD.getSubjects().map((name) => {
+        const li = make("li", "sd-subject-chip");
+        const del = make("button", "", "×");
+        del.type = "button";
+        del.setAttribute("aria-label", `${name} 과목 삭제`);
+        del.addEventListener("click", () => {
+          if (!del.classList.contains("is-confirm")) {
+            del.classList.add("is-confirm");
+            del.textContent = "삭제?";
+            return;
+          }
+          SD.removeSubject(name);
+          render("과목을 지웠어요. 기록은 그대로 있어요.");
+        });
+        li.append(name, del);
+        return li;
+      }),
+    );
+  }
+
+  $("#heatSubject").addEventListener("change", (e) => {
+    heatSubject = e.target.value;
+    try {
+      localStorage.setItem("heatSubject", heatSubject);
+    } catch (err) {}
+    renderHeat();
+  });
+  $("#subjectToggle").addEventListener("click", (e) => {
+    const box = $("#subjectBox");
+    const open = box.classList.toggle("d-none") === false;
+    e.currentTarget.setAttribute("aria-expanded", String(open));
+    if (open) $("#subjectName").focus();
+  });
+  $("#subjectForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#subjectName");
+    if (!input.value.trim()) return input.focus();
+    const name = SD.addSubject(input.value);
+    if (!name) return notify("과목은 30개까지 추가할 수 있어요.");
+    input.value = "";
+    render(`${name} 과목을 추가했어요.`);
+    input.focus();
+  });
+
   function render(msg) {
     notify(msg);
     ctx = Views.load();
@@ -105,6 +190,8 @@
     renderDdays();
     const wk = Views.renderWeekStrip($("#weekStrip"), ctx);
     $("#weekRange").textContent = `${Views.md(wk.start)} – ${Views.md(wk.end)}`;
+    renderHeat();
+    renderSubjects();
   }
 
   Views.bindDayList($("#todayList"), () => ctx, render);
@@ -129,6 +216,7 @@
       SD.KEYS.ddays,
       SD.KEYS.studyLogs,
       SD.KEYS.settings,
+      SD.KEYS.subjects,
     ],
     () => render(),
   );

@@ -192,7 +192,7 @@ const SD = (() => {
     return t;
   }
 
-  // Tick / untick a task's session for a date (Todo and Main use this).
+  // Tick / untick a task's session for a date (Planner and Dashboard use this).
   // done=true adds `hours` studied that day; done=false clears that day for the task.
   function toggleSession(taskId, ymd, done, hours = 1) {
     return updateTask(taskId, t => {
@@ -205,7 +205,7 @@ const SD = (() => {
   const hoursBefore = (task, ymd) => task.sessions.filter(x => x.date < ymd).reduce((s, x) => s + x.hours, 0);
   const totalHours = task => task.sessions.reduce((s, x) => s + x.hours, 0);
 
-  // a plain to-do (no planner) — Calendar · Todo and Main use this
+  // a plain to-do (no planner) — Calendar · Todo and Dashboard use this
   const newTodo = ({ title, due, subject = '', priority = 'mid', repeat = null }) => normalizeTask({
     id: newId(), title, date: due, subject, priority, type: 'general', size: 1, completed: false, planned: false,
     repeat, doneDates: [], createdAt: date.today(), sessions: [], plan: null
@@ -251,7 +251,7 @@ const SD = (() => {
   const getDdays = () => readList(KEYS.ddays, normalizeDday);
   const saveDdays = ddays => writeRaw(KEYS.ddays, ddays);
 
-  // D-Day list for Main / Dashboard: plain D-Days + deadlines marked showDday, nearest first
+  // D-Day list for Dashboard: plain D-Days + deadlines marked showDday, nearest first
   function allDdays() {
     const fromDeadlines = getEvents()
       .filter(e => e.kind === 'deadline' && e.showDday)

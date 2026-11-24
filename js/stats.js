@@ -1,6 +1,6 @@
 /* =========================================================
    Study Dashboard — read-only summaries (load after storage.js)
-   Pure functions over SD data. Main · Dashboard · Timer use it.
+   Pure functions over SD data. Dashboard · Timer use it.
    Study time = Timer logs (studyLogs.minutes).
    Maintainer: 김지환
    ========================================================= */

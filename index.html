@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Main | Study Dashboard</title>
+  <title>Dashboard | Study Dashboard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,8 +26,7 @@
       </button>
       <div class="collapse navbar-collapse" id="sdNav">
         <ul class="navbar-nav ms-lg-3 gap-lg-1">
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">Main</a></li>
-          <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">Dashboard</a></li>
           <li class="nav-item"><a class="nav-link" href="calendar.html">Calendar · Todo</a></li>
           <li class="nav-item"><a class="nav-link" href="planner.html">Planner</a></li>
           <li class="nav-item"><a class="nav-link" href="timer.html">Timer</a></li>
@@ -105,6 +104,35 @@
       </div>
       <div class="sd-wstrip" id="weekStrip"></div>
     </div></section>
+
+    <!-- 공부 기록: Timer 잔디 -->
+    <section class="card mt-4" aria-labelledby="heatTitle"><div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+        <h2 class="sd-section-title" id="heatTitle">공부 기록 <span class="small text-secondary fw-normal" id="heatYear">Timer · 1월 1일부터</span></h2>
+        <div class="d-flex align-items-center gap-2">
+          <label class="visually-hidden" for="heatSubject">과목</label>
+          <select class="form-select form-select-sm" id="heatSubject"></select>
+          <button class="btn btn-sm btn-outline-secondary text-nowrap" type="button" id="subjectToggle" aria-expanded="false" aria-controls="subjectBox">과목 관리</button>
+        </div>
+      </div>
+      <p class="sd-heat-summary mb-3" id="heatSummary"></p>
+
+      <div class="sd-subject-box d-none mb-3" id="subjectBox">
+        <form class="sd-quick mb-2" id="subjectForm" novalidate>
+          <label class="visually-hidden" for="subjectName">과목 이름</label>
+          <input class="form-control form-control-sm" id="subjectName" type="text" maxlength="30" placeholder="과목 추가 (예: 자료구조)" autocomplete="off">
+          <button class="btn btn-sm btn-primary" type="submit">추가</button>
+        </form>
+        <ul class="sd-subject-list" id="subjectList"></ul>
+        <p class="small text-secondary mb-0">할 일 · 일정 · Timer의 과목 칸에서 "+ 새 과목"으로도 추가돼요. 지워도 기록은 남아요.</p>
+      </div>
+
+      <div class="sd-heat-scroll" id="heatGrid"></div>
+      <div class="sd-heat-legend mt-2" aria-hidden="true">
+        <span>적음</span><i class="lv0"></i><i class="lv1"></i><i class="lv2"></i><i class="lv3"></i><i class="lv4"></i><span>많음</span>
+        <span class="ms-2">하루 30분 · 1시간 · 2시간 기준</span>
+      </div>
+    </div></section>
   </main>
 
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
@@ -119,6 +147,7 @@
   <script src="js/planner.js" defer></script>
   <script src="js/stats.js" defer></script>
   <script src="js/views.js" defer></script>
+  <script src="js/heatmap.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>
