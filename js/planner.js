@@ -40,7 +40,7 @@ const Planner = (() => {
   const PRIORITY_WEIGHT = { high: 3, mid: 2, low: 1 };
   const REASON_LABEL = { plan: '', catchup: '보충', due: '마감일', overdue: '기한 지남', fallback: '대체', early: '미리' };
   const REASON_RANK = { overdue: 0, due: 1, catchup: 2, fallback: 3, plan: 3, early: 4 };
-  const DEFAULT_SETTINGS = { shortDayHours: 4, longDayHours: 8, restDays: [], week: SD.DEFAULT_WEEK, startEarly: true };
+  const DEFAULT_SETTINGS = { shortDayHours: 4, longDayHours: 8, restDays: [], week: SD.DEFAULT_WEEK, startEarly: true, examOrder: 'one' };
 
   const range = (from, to) => { const out = []; for (let d = from; d <= to; d = D.addDays(d, 1)) out.push(d); return out; };
   const maxDate = (a, b) => (a > b ? a : b);
@@ -251,7 +251,8 @@ const Planner = (() => {
       if (!(t.subject in factors)) factors[t.subject] = subjectFactor(tasks, t.subject, ctx);
     });
     const factorOf = t => (t.type === 'exam' && factors[t.subject]) || 1;
-    const boundaryOf = t => (t.type === 'exam' ? examBoundary(open, t, today) : null);
+    // 하나씩 (examOrder 'one'): an exam waits for the earlier open exam · 골고루 ('spread'): every exam uses its own window
+    const boundaryOf = t => (t.type === 'exam' && ctx.s.examOrder !== 'spread' ? examBoundary(open, t, today) : null);
     const demands = open.flatMap(t => demandsFor(t, today, horizonEnd, ctx, factorOf(t), boundaryOf(t)).map(s => ({ ...s, task: t })));
 
     const addItem = (d, s, hours, block = 'h') => {
@@ -340,7 +341,7 @@ const Planner = (() => {
     const ctx = context(settings, events, openExamDays(allTasks, task.id));
     const factor = task.type === 'exam' ? subjectFactor(allTasks, task.subject, ctx, task.id) : null;
     const p = params(task, factor || 1);
-    const boundary = task.type === 'exam' && task.date ? examBoundary(allTasks.filter(t => t.id !== task.id), task, D.today()) : null;
+    const boundary = task.type === 'exam' && task.date && ctx.s.examOrder !== 'spread' ? examBoundary(allTasks.filter(t => t.id !== task.id), task, D.today()) : null;
     const sessions = task.date ? desiredSessions(task, ctx, factor || 1, boundary) : [];
     const main = sessions.filter(it => it.reason !== 'early');
     const total = main.reduce((s, it) => s + itemHours(it, ctx), 0);

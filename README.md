@@ -87,7 +87,7 @@ localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마�
 | events | Calendar | `SD.getEvents()` · `SD.eventsOn(ymd)` · `SD.hasScheduleOn(ymd)` | `SD.saveEvents(arr)` |
 | ddays | Calendar | `SD.getDdays()` · `SD.allDdays()` (마감 D-Day 포함) | `SD.saveDdays(arr)` |
 | studyLogs | Timer | `SD.getStudyLogs()` | `SD.addStudyLog({ subject, minutes, taskId })` |
-| settings | Planner | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly })` |
+| settings | Planner | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly, examOrder })` |
 | subjects | 어디서나 (과목 칸 · Dashboard 과목 관리) | `SD.getSubjects()` | `SD.addSubject(name)` · `SD.removeSubject(name)` |
 
 다른 페이지에서 할 일 상태 바꿀 때 (tasks에 직접 쓰지 말 것)
@@ -145,7 +145,8 @@ tasks 형식
 - **계획 범위:** 오늘부터 가장 늦은 마감까지 (최소 14일, 최대 120일). 그래서 달력에서 3~4주 뒤 시험 전날까지 공부가 보임.
 - **다른 시험이 있는 날:** 종일로 잡지 않고, 짧게 날 한도까지만 공부.
 - 하루 한도: 짧게 날 `settings.shortDayHours` (기본 4시간), 종일 = `settings.longDayHours` (기본 8시간). 넘치면 앞날로 나눠 배치, 그래도 안 되면 경고.
-- **시험은 하나씩:** 앞 시험이 끝나기 전엔 다음 시험 공부를 시작하지 않음. 남은 날이 적으면 같은 총 시간을 그 날들에 몰아서 배치하고, 그래도 안 들어가면 앞 시험 전 날에 일부 배치.
+- **시험 순서 설정** (`settings.examOrder`, Planner의 플래너 설정): `one` 하나씩 (기본) / `spread` 골고루 = 시험마다 원래 기간 동안 같이 공부 (아래 규칙 없음).
+- **시험은 하나씩 (하나씩일 때):** 앞 시험이 끝나기 전엔 다음 시험 공부를 시작하지 않음. 남은 날이 적으면 같은 총 시간을 그 날들에 몰아서 배치하고, 그래도 안 들어가면 앞 시험 전 날에 일부 배치.
 - **여유 있으면 미리 시작:** 시험 공부 기간 전에 이틀에 한 번 1시간 "미리" 세션 (작업량 3: 7일, 4: 14일, 5: 21일 전부터). 빈 시간에만 들어가고, 건너뛰어도 보충 없음. 해 두면 마지막 날들 시간이 줄어듦. 설정 `settings.startEarly`, 할 일별 `plan.early`.
 - **과목별 학습 기록:** 완료한 시험의 실제 공부 시간 ÷ 계획 시간 평균(0.5~2배)을 같은 과목 다음 시험 시간에 곱함. 실제 시간 = 오늘의 계획에서 체크한 시간.
 
