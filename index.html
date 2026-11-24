@@ -37,13 +37,14 @@
 
   <main class="container-xl py-4">
     <!-- 오늘 -->
-    <header class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-      <div>
-        <div class="sd-eyebrow" id="todayLabel"></div>
+    <header class="sd-dash-header mb-4">
+      <div class="sd-dash-text">
+        <div class="sd-eyebrow">오늘의 학습</div>
         <h1 class="sd-page-title" id="greeting">안녕하세요!</h1>
         <p class="text-secondary mb-0 mt-1" id="greetingSub"></p>
       </div>
-      <a class="btn btn-primary btn-lg px-4" href="timer.html">공부 시작하기</a>
+      <p class="sd-today mb-0" id="todayLabel"></p>
+      <a class="btn btn-primary btn-lg px-4 sd-dash-cta" href="timer.html">공부 시작하기</a>
     </header>
 
     <div class="row g-4 mb-4">

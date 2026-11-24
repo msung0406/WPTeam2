@@ -55,6 +55,8 @@ const SD = (() => {
     diff: (a, b) => Math.round((date.parse(a) - date.parse(b)) / 86400000),   // a − b in days
     dow: ymd => date.parse(ymd).getDay(),                                     // 0 Sun … 6 Sat
     isWeekend: ymd => [0, 6].includes(date.parse(ymd).getDay()),
+    // one date format for every page header: "2026년 11월 24일 (화)"
+    label: ymd => { const d = date.parse(ymd); return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})`; },
     isYMD, isHM
   };
 
@@ -358,6 +360,14 @@ const SD = (() => {
     window.addEventListener('storage', e => {
       if (e.key === null || keys.includes(e.key)) callback(e.key);
     });
+  }
+
+  /* ---------- today's date, top right of every page (<p class="sd-today" id="todayLabel">) ----------
+     Filled here so all pages show the same thing; refreshed on focus (catches midnight). */
+  if (typeof document !== 'undefined' && document.getElementById) {
+    const showToday = () => { const n = document.getElementById('todayLabel'); if (n) n.textContent = `오늘 · ${date.label(date.today())}`; };
+    showToday();
+    window.addEventListener('focus', showToday);
   }
 
   /* ---------- auto-sync on load and when Calendar changes in another tab ---------- */

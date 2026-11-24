@@ -152,6 +152,7 @@ tasks 형식
 
 기타
 - `SD.TYPES` / `SD.TYPE_LABEL` · `SD.SIZES` / `SD.SIZE_LABEL` · `SD.PRIORITY_LABEL`
+- 오른쪽 위 오늘 날짜: 헤더에 `<p class="sd-today mb-0" id="todayLabel"></p>`만 두면 storage.js가 채움 (`SD.date.label(ymd)` → "2026년 11월 24일 (화)")
 - `SD.date.today()` · `.addDays(ymd, n)` · `.diff(a, b)` · `.parse(ymd)` · `.toYMD(date)` · `.dow(ymd)`
 - `SD.hoursOn(task, ymd)` · `SD.totalHours(task)` 공부한 시간
 - `SD.newId()` id 생성 · `SD.onChange([SD.KEYS.tasks], fn)` 다른 탭 변경 감지

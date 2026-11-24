@@ -386,7 +386,6 @@
     const todayLogs = logs.filter((l) => l.date === today);
     const focusCount = todayLogs.filter((l) => l.mode === "focus").length;
 
-    els.todayLabel.textContent = Stats.formatDate(today);
     els.todayTotal.textContent = Stats.formatMinutes(
       Stats.minutesOn(today, logs),
     );

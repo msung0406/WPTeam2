@@ -3,6 +3,16 @@
    ========================================================= */
 #todayList:empty { display: none; }
 
+/* header: text left · date top right (same spot as other pages) · button bottom right; phone: button under the text */
+.sd-dash-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem 1rem; }
+.sd-dash-text { grid-row: 1 / span 2; }
+.sd-dash-header .sd-today { grid-column: 2; grid-row: 1; justify-self: end; }
+.sd-dash-cta { grid-column: 2; grid-row: 2; align-self: end; }
+@media (max-width: 575.98px) {
+  .sd-dash-text { grid-row: 1; }
+  .sd-dash-cta { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+}
+
 /* ---------- Timer heatmap (js/heatmap.js) ---------- */
 .sd-heat, .sd-heat-legend {
   --lv0: var(--sd-sunk);

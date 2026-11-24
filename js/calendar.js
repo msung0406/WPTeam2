@@ -311,7 +311,6 @@
     notify(msg);
     ctx = Views.load();
     const evMap = eventsByDate();
-    el.todayLabel.textContent = `오늘 ${D.today().replaceAll("-", ".")} (${DOW[D.dow(D.today())]})`;
     renderCalendar(evMap);
     renderSelectedDay(evMap);
     renderDdays();

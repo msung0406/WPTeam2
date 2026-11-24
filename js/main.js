@@ -35,12 +35,6 @@
   let ctx;
 
   function renderHeader(rows) {
-    $("#todayLabel").textContent = Stats.formatDate(ctx.today, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "long",
-    });
     $("#greeting").textContent = greeting();
     const p = Views.dayProgress(rows);
     const left = p.total - p.done;

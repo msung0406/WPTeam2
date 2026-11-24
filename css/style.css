@@ -133,6 +133,10 @@ body { font-feature-settings: "tnum"; }
 .sd-stat-value { font-size: 1.6rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .sd-stat-value small { font-size: .85rem; font-weight: 400; color: var(--sd-muted); margin-left: .25rem; }
 
+/* today's date, top right of every page header (filled by storage.js) */
+.sd-today { font-size: .85rem; color: var(--sd-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+header > .sd-today { align-self: flex-start; padding-top: .1rem; }
+
 /* priority colors — used by Todo, Calendar, Dashboard */
 .sd-pri { font-weight: 600; }
 .sd-pri-high { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }

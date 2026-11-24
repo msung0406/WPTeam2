@@ -390,6 +390,5 @@
   SD.onChange([SD.KEYS.tasks, SD.KEYS.events, SD.KEYS.settings], () => render());
 
   /* ---------- init ---------- */
-  $('#todayLabel').textContent = `오늘 ${fmtDate(D.today())}`;
   render();
 })();
