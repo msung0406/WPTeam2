@@ -32,7 +32,7 @@ const SD = (() => {
   const AVAIL = ['off', 'short', 'long'];
   const AVAIL_LABEL = { off: '쉼', short: '짧게', long: '길게' };
   const DEFAULT_WEEK = ['short', 'short', 'short', 'short', 'short', 'short', 'long'];
-  const DEFAULT_SETTINGS = { shortDayHours: 4, longDayHours: 8, restDays: [], restNotes: {}, week: DEFAULT_WEEK, startEarly: true, examOrder: 'one' };
+  const DEFAULT_SETTINGS = { shortDayHours: 4, longDayHours: 8, restDays: [], restNotes: {}, week: DEFAULT_WEEK, startEarly: true, examStyle: 'mix' };
   const clampInt = (v, lo, hi) => { const n = parseInt(v, 10); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };
   const halfHours = (v, lo, hi) => { const n = Math.round(parseFloat(v) * 2) / 2; return Number.isFinite(n) && n >= lo && n <= hi ? n : null; }; // 0.5 steps
 
@@ -172,7 +172,7 @@ const SD = (() => {
       restDays: Array.isArray(s.restDays) ? [...new Set(s.restDays.filter(isYMD))].sort() : [],                // 쉬는 날: specific dates with nothing planned
       restNotes: normalizeRestNotes(s.restNotes, s.restDays),                                                 // optional note per break day, e.g. "가족 여행"
       startEarly: s.startEarly !== false,                                                  // light 미리 review before exams when there is time
-      examOrder: oneOf(s.examOrder, ['one', 'spread'], 'one'),                             // 'one' 하나씩: next exam after the previous · 'spread' 골고루: all in parallel
+      examStyle: oneOf(s.examStyle, ['mix', 'single'], 'mix'),                             // 'mix' 골고루: a day can mix exams · 'single' 하루 한 과목: each day goes to one exam
       week: Array.isArray(s.week) && s.week.length === 7 ? s.week.map((v, i) => oneOf(v, AVAIL, DEFAULT_WEEK[i])) : [...DEFAULT_WEEK]
     };
   }

@@ -40,7 +40,7 @@ const Planner = (() => {
   const PRIORITY_WEIGHT = { high: 3, mid: 2, low: 1 };
   const REASON_LABEL = { plan: '', catchup: '보충', due: '마감일', overdue: '기한 지남', fallback: '대체', early: '미리' };
   const REASON_RANK = { overdue: 0, due: 1, catchup: 2, fallback: 3, plan: 3, early: 4 };
-  const DEFAULT_SETTINGS = { shortDayHours: 4, longDayHours: 8, restDays: [], week: SD.DEFAULT_WEEK, startEarly: true, examOrder: 'one' };
+  const DEFAULT_SETTINGS = { shortDayHours: 4, longDayHours: 8, restDays: [], week: SD.DEFAULT_WEEK, startEarly: true, examStyle: 'mix' };
 
   const range = (from, to) => { const out = []; for (let d = from; d <= to; d = D.addDays(d, 1)) out.push(d); return out; };
   const maxDate = (a, b) => (a > b ? a : b);
@@ -251,9 +251,11 @@ const Planner = (() => {
       if (!(t.subject in factors)) factors[t.subject] = subjectFactor(tasks, t.subject, ctx);
     });
     const factorOf = t => (t.type === 'exam' && factors[t.subject]) || 1;
-    // 하나씩 (examOrder 'one'): an exam waits for the earlier open exam · 골고루 ('spread'): every exam uses its own window
-    const boundaryOf = t => (t.type === 'exam' && ctx.s.examOrder !== 'spread' ? examBoundary(open, t, today) : null);
-    const demands = open.flatMap(t => demandsFor(t, today, horizonEnd, ctx, factorOf(t), boundaryOf(t)).map(s => ({ ...s, task: t })));
+    const single = ctx.s.examStyle === 'single';
+    // 골고루 (mix): an exam waits for the earlier open exam · 하루 한 과목 (single): exams share the days, one exam per day
+    const boundaryOf = t => (t.type === 'exam' && !single ? examBoundary(open, t, today) : null);
+    let demands = open.flatMap(t => demandsFor(t, today, horizonEnd, ctx, factorOf(t), boundaryOf(t)).map(s => ({ ...s, task: t })));
+    if (single) demands = [...demands.filter(s => s.task.type !== 'exam'), ...singleSubjectDays(demands.filter(s => s.task.type === 'exam'), today, ctx)];
 
     const addItem = (d, s, hours, block = 'h') => {
       const day = days[d];
@@ -334,6 +336,41 @@ const Planner = (() => {
     return { today, days: out, overflow, factors };
   }
 
+  /* ---------- 하루 한 과목: each study day goes to ONE exam, all day ----------
+     Each exam keeps its total hours (what's still owed from today) and its window (start … day before the exam).
+     Days are handed out from the last one backwards: the day before an exam always goes to that exam; otherwise the
+     exam with the most hours left per day still available gets the day (ties → the exam that comes next), so exams rotate.
+     Optional 미리 review isn't used in this mode.                                                                */
+  function singleSubjectDays(examDemands, today, ctx) {
+    const exams = new Map();
+    examDemands.filter(s => s.reason !== 'early').forEach(s => {
+      const e = exams.get(s.task.id) || { task: s.task, need: 0, from: maxDate(s.from || today, today), last: D.addDays(s.task.date, -1) };
+      e.need = half(e.need + itemHours(s, ctx));
+      e.from = s.reason === 'catchup' ? today : e.from;
+      exams.set(s.task.id, e);
+    });
+    const list = [...exams.values()].filter(e => e.need > 0);
+    if (!list.length) return [];
+    const studyDays = (e, upTo) => range(e.from, upTo).filter(d => ctx.cap(d) > 0).length;
+    const lastDay = list.map(e => e.last).sort().pop();
+    const out = [];
+    for (let d = lastDay; d >= today; d = D.addDays(d, -1)) {
+      const cap = ctx.cap(d);
+      if (cap <= 0) continue;
+      const cands = list.filter(e => e.need > 0 && e.from <= d && d <= e.last);
+      if (!cands.length) continue;
+      cands.sort((a, b) => (b.last === d) - (a.last === d)                       // the day before an exam is that exam's
+        || b.need / studyDays(b, d) - a.need / studyDays(a, d) || a.task.date.localeCompare(b.task.date));
+      const e = cands[0];
+      const item = { task: e.task, date: d, from: e.from, to: e.last, min: e.from, reason: 'plan' };
+      if (ctx.canLong(d) && e.need >= ctx.s.longDayHours * 0.75) { out.push({ ...item, block: 'day' }); e.need = half(e.need - ctx.s.longDayHours); }
+      else { const h = Math.min(cap, e.need); out.push({ ...item, block: 'h', hours: h }); e.need = half(e.need - h); }
+    }
+    // what didn't fit stays on the exam's last day → shows up as overflow
+    list.filter(e => e.need > 0).forEach(e => out.push({ task: e.task, date: maxDate(e.last, today), from: e.from, to: e.last, min: e.from, block: 'h', hours: e.need, reason: 'plan' }));
+    return out;
+  }
+
   const planDay = args => plan(args).days[args.today || D.today()] || [];
 
   /* ---------- for the form ---------- */
@@ -341,12 +378,20 @@ const Planner = (() => {
     const ctx = context(settings, events, openExamDays(allTasks, task.id));
     const factor = task.type === 'exam' ? subjectFactor(allTasks, task.subject, ctx, task.id) : null;
     const p = params(task, factor || 1);
-    const boundary = task.type === 'exam' && task.date && ctx.s.examOrder !== 'spread' ? examBoundary(allTasks.filter(t => t.id !== task.id), task, D.today()) : null;
+    const single = ctx.s.examStyle === 'single';
+    const boundary = task.type === 'exam' && task.date && !single ? examBoundary(allTasks.filter(t => t.id !== task.id), task, D.today()) : null;
     const sessions = task.date ? desiredSessions(task, ctx, factor || 1, boundary) : [];
     const main = sessions.filter(it => it.reason !== 'early');
     const total = main.reduce((s, it) => s + itemHours(it, ctx), 0);
     const earlyHours = sessions.length - main.length;
     const after = boundary ? allTasks.find(t => t.planned !== false && t.type === 'exam' && t.date === boundary && !t.completed && !t.archived) : null;
+    if (single && task.type === 'exam' && task.date) {
+      // which days this exam actually gets depends on the other exams → run the real plan with the draft in it
+      const draft = { title: '', priority: 'mid', completed: false, archived: false, planned: true, sessions: [], ...task, id: task.id ?? -1 };
+      const r = plan({ tasks: [...allTasks.filter(t => t.id !== draft.id), draft], events, settings });
+      const mine = Object.entries(r.days).flatMap(([date, items]) => items.filter(i => i.taskId === draft.id).map(i => ({ ...i, date })));
+      return { params: p, sessions: mine, totalHours: total, earlyHours: 0, factor, after: null, single: true };
+    }
     return { params: p, sessions: sessions.map(it => ({ ...it, label: hoursLabel(it) })), totalHours: total, earlyHours, factor, after: after ? after.title : null };
   }
 

@@ -113,9 +113,9 @@
     SD.saveSettings({ ...settings(), shortDayHours: Number(el.shortHours.value), longDayHours: Number(el.longHours.value) });
     afterSettings('설정을 저장했습니다.');
   }));
-  $$('input[name="examOrder"]').forEach(r => r.addEventListener('change', () => {
-    SD.saveSettings({ ...settings(), examOrder: r.value });
-    afterSettings(r.value === 'spread' ? '시험을 골고루 나눠서 공부합니다.' : '시험을 하나씩 차례로 공부합니다.');
+  $$('input[name="examStyle"]').forEach(r => r.addEventListener('change', () => {
+    SD.saveSettings({ ...settings(), examStyle: r.value });
+    afterSettings(r.value === 'single' ? '하루에 한 과목씩, 시험을 번갈아 공부합니다.' : '하루에 여러 과목을 섞어서 공부합니다.');
   }));
   el.startEarly.addEventListener('change', () => {
     SD.saveSettings({ ...settings(), startEarly: el.startEarly.checked });
@@ -283,10 +283,10 @@
     const s = settings();
     el.shortHours.value = s.shortDayHours;
     el.startEarly.checked = s.startEarly !== false;
-    $(s.examOrder === 'spread' ? '#examOrderSpread' : '#examOrderOne').checked = true;
-    $('#examOrderHint').textContent = s.examOrder === 'spread'
-      ? '골고루: 시험마다 원래 기간 동안 같이 공부해요. 하루에 여러 과목이 섞여요.'
-      : '하나씩: 앞 시험이 끝난 뒤에 다음 시험 공부를 시작해요. 시험이 붙어 있으면 뒤 시험 시간이 모자랄 수 있어요.';
+    $(s.examStyle === 'single' ? '#examStyleSingle' : '#examStyleMix').checked = true;
+    $('#examStyleHint').textContent = s.examStyle === 'single'
+      ? '하루 한 과목: 하루를 통째로 한 시험에 써요 (예: 알고리즘 → 웹프 → CC 순서로 번갈아). 시험 전날은 그 시험.'
+      : '골고루: 하루에 여러 과목이 섞일 수 있어요. 시험 사이가 넉넉하면 앞 시험이 끝난 뒤 다음 시험을 시작해요.';
     el.longHours.value = s.longDayHours;
     $$('[data-dow]', el.weekPick).forEach(b => {
       const v = s.week[Number(b.dataset.dow)];
@@ -296,7 +296,7 @@
     });
     const longDays = WEEK_ORDER.filter(d => s.week[d] === 'long').map(d => DOW[d]).join('');
     const offDays = WEEK_ORDER.filter(d => s.week[d] === 'off').map(d => DOW[d]).join('');
-    el.settingsSummary.textContent = `길게 ${longDays || '없음'}` + (offDays ? ` · 쉼 ${offDays}` : '') + ` · 짧게 최대 ${s.shortDayHours}시간 · 시험 ${s.examOrder === 'spread' ? '골고루' : '하나씩'}`;
+    el.settingsSummary.textContent = `길게 ${longDays || '없음'}` + (offDays ? ` · 쉼 ${offDays}` : '') + ` · 짧게 최대 ${s.shortDayHours}시간 · 시험 ${s.examStyle === 'single' ? '하루 한 과목' : '골고루'}`;
   }
 
   // upcoming break days, consecutive dates with the same note shown as one range

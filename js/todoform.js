@@ -219,6 +219,7 @@ const TodoForm = (() => {
       const total = pv.totalHours ? ` · 총 약 ${Math.round(pv.totalHours)}시간` : '';
       f.hint.replaceChildren(make('span', 'sd-hint-rule', Planner.describe(pv.params) + total + (draft.plan ? ' (맞춤)' : '')));
       if (pv.earlyHours) f.hint.append(make('span', 'sd-hint-early', `여유 있으면 그 전에 미리 복습 1시간 × ${pv.earlyHours} (선택)`));
+      if (pv.single) f.hint.append(make('span', 'sd-hint-after', '하루 한 과목 모드: 다른 시험과 하루씩 번갈아 배치해요'));
       if (pv.after) f.hint.append(make('span', 'sd-hint-after', `'${pv.after}' 시험이 끝난 뒤에 시작합니다`));
       if (pv.factor && pv.factor !== 1 && !(draft.plan && draft.plan.hours !== null)) {
         f.hint.append(make('span', 'sd-hint-factor', `${draft.subject} 지난 시험은 계획의 ${pv.factor}배 걸렸어요 → 공부 시간에 반영했습니다`));

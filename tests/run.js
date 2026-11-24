@@ -419,17 +419,25 @@ test("another exam's day: never 종일, at most a 짧게 day", () => {
   assert.ok(!onSat.some(i => i.block === 'day'));
   assert.ok(onSat.reduce((h, i) => h + i.hours, 0) <= S.shortDayHours);
 });
-test('exam order: 하나씩 waits for the earlier exam, 골고루 studies both in parallel', () => {
+test('하루 한 과목: every day holds one exam, exams rotate, the day before each exam is its own', () => {
   const { P } = boot();
-  const a = task({ id: 1, type: 'exam', size: 4, date: '2026-11-16', createdAt: MON });
-  const b = task({ id: 2, type: 'exam', size: 5, date: '2026-11-27', createdAt: MON });   // final: 12-day window overlaps a
-  const before = (r, id) => Object.entries(r.days).filter(([d, it]) => d < '2026-11-16' && it.some(i => i.taskId === id && i.reason !== 'early')).length;
-  assert.strictEqual(before(P.plan({ tasks: [a, b], settings: S, today: MON }), 2), 0);
-  assert.ok(before(P.plan({ tasks: [a, b], settings: { ...S, examOrder: 'spread' }, today: MON }), 2) > 0);
+  const ex = (id, date) => task({ id, type: 'exam', size: 4, date, createdAt: MON });
+  const tasks = [ex(1, '2026-11-20'), ex(2, '2026-11-23'), ex(3, '2026-11-25')];
+  const r = P.plan({ tasks, settings: { ...S, startEarly: false, examStyle: 'single' }, today: MON });
+  const perDay = Object.entries(r.days).filter(([, it]) => it.length);
+  perDay.forEach(([d, it]) => assert.strictEqual(new Set(it.map(i => i.taskId)).size, 1, d + ' mixes exams'));
+  assert.ok(r.days['2026-11-19'].every(i => i.taskId === 1));
+  assert.ok(r.days['2026-11-22'].every(i => i.taskId === 2));
+  assert.ok(r.days['2026-11-24'].every(i => i.taskId === 3));
+  const owners = perDay.map(([, it]) => it[0].taskId);
+  assert.ok(owners.some((id, k) => k > 0 && owners[k - 1] !== id && owners.indexOf(id) < k - 1), 'exams take turns');
+  const mix = P.plan({ tasks, settings: { ...S, startEarly: false }, today: MON });
+  const sum = res => Object.values(res.days).flat().reduce((h, i) => h + (i.block === 'day' ? 8 : i.hours), 0) + res.overflow.reduce((h, o) => h + o.hours, 0);
+  assert.strictEqual(sum(r), sum(mix));
 });
-test('settings: examOrder defaults to one, bad values fall back', () => {
-  const { SD } = boot({ settings: JSON.stringify({ examOrder: 'zigzag' }) });
-  assert.strictEqual(SD.getSettings().examOrder, 'one');
+test('settings: examStyle defaults to mix, bad values fall back', () => {
+  const { SD } = boot({ settings: JSON.stringify({ examStyle: 'zigzag' }) });
+  assert.strictEqual(SD.getSettings().examStyle, 'mix');
 });
 test('ids unique', () => {
   const { SD } = boot(); const s = new Set(); for (let i = 0; i < 1000; i++) s.add(SD.newId()); assert.strictEqual(s.size, 1000);
