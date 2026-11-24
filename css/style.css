@@ -1,0 +1,450 @@
+/* =========================================================
+   Study Dashboard — shared styles (ALL pages load this, after Bootstrap)
+   THEMES LIVE ONLY IN THE TOKEN BLOCKS BELOW. js/theme.js sets <html data-theme="…">
+   (and data-bs-theme="dark" for dark ones); the ⚙ settings panel (js/settings.js) picks one.
+   Selectors are [data-theme] (not :root only) so the settings panel can preview a theme on a swatch.
+   Add a theme: one block here + one line in js/theme.js THEMES.
+   ========================================================= */
+
+/* ---------- 1. Theme tokens ---------- */
+:root {
+  --sd-font: "IBM Plex Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --sd-radius: 10px;
+  --sd-radius-sm: 8px;
+}
+
+:root, [data-theme="default"] {
+  --sd-bg: #f2f4f6;
+  --sd-surface: #ffffff;
+  --sd-sunk: #e9edf0;
+  --sd-line: #dce2e7;
+  --sd-ink: #1d2b36;
+  --sd-muted: #5b6974;
+  --sd-accent: #e8553a;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #c8412a;
+  --sd-accent-soft: #fde6df;
+  --sd-nav: #1d2b36;
+  --sd-nav-ink: #c9d3da;
+  --sd-nav-brand: #ffffff;
+  --sd-high: #d2412c;
+  --sd-mid: #c27c14;
+  --sd-low: #2f7d63;
+  color-scheme: light;
+}
+
+[data-theme="latte"] {
+  --sd-bg: #e6e9ef;
+  --sd-surface: #eff1f5;
+  --sd-sunk: #dce0e8;
+  --sd-line: #ccd0da;
+  --sd-ink: #4c4f69;
+  --sd-muted: #6c6f85;
+  --sd-accent: #babbf1;
+  --sd-accent-ink: #4c4f69;
+  --sd-accent-text: #5c5fc4;
+  --sd-accent-soft: rgba(186,187,241,.35);
+  --sd-nav: #dce0e8;
+  --sd-nav-ink: #5c5f77;
+  --sd-nav-brand: #4c4f69;
+  --sd-high: #d20f39;
+  --sd-mid: #df8e1d;
+  --sd-low: #40a02b;
+  color-scheme: light;
+}
+
+[data-theme="forest"] {
+  --sd-bg: #eef3ee;
+  --sd-surface: #ffffff;
+  --sd-sunk: #e2ebe3;
+  --sd-line: #cfdcd1;
+  --sd-ink: #1f2d24;
+  --sd-muted: #5a6b5f;
+  --sd-accent: #2f855a;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #276749;
+  --sd-accent-soft: #d8eedf;
+  --sd-nav: #1f3a2b;
+  --sd-nav-ink: #c4d6ca;
+  --sd-nav-brand: #ffffff;
+  --sd-high: #c53030;
+  --sd-mid: #b7791f;
+  --sd-low: #2f855a;
+  color-scheme: light;
+}
+
+[data-theme="ocean"] {
+  --sd-bg: #eef4f9;
+  --sd-surface: #ffffff;
+  --sd-sunk: #e1ebf3;
+  --sd-line: #cfdeea;
+  --sd-ink: #172b3a;
+  --sd-muted: #55697a;
+  --sd-accent: #2b6cb0;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #2c5282;
+  --sd-accent-soft: #dbe9f7;
+  --sd-nav: #12324f;
+  --sd-nav-ink: #c3d4e4;
+  --sd-nav-brand: #ffffff;
+  --sd-high: #c53030;
+  --sd-mid: #b7791f;
+  --sd-low: #2f855a;
+  color-scheme: light;
+}
+
+[data-theme="sakura"] {
+  --sd-bg: #fbf1f4;
+  --sd-surface: #ffffff;
+  --sd-sunk: #f5e3e9;
+  --sd-line: #ecd2db;
+  --sd-ink: #3a2430;
+  --sd-muted: #7a5f6b;
+  --sd-accent: #d6578a;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #b83b6e;
+  --sd-accent-soft: #f9dbe7;
+  --sd-nav: #f5e3e9;
+  --sd-nav-ink: #7a5f6b;
+  --sd-nav-brand: #3a2430;
+  --sd-high: #c53030;
+  --sd-mid: #b7791f;
+  --sd-low: #2f855a;
+  color-scheme: light;
+}
+
+[data-theme="mono"] {
+  --sd-bg: #f4f4f4;
+  --sd-surface: #ffffff;
+  --sd-sunk: #e9e9e9;
+  --sd-line: #d9d9d9;
+  --sd-ink: #1a1a1a;
+  --sd-muted: #616161;
+  --sd-accent: #1a1a1a;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #1a1a1a;
+  --sd-accent-soft: #e6e6e6;
+  --sd-nav: #111111;
+  --sd-nav-ink: #bbbbbb;
+  --sd-nav-brand: #ffffff;
+  --sd-high: #c62828;
+  --sd-mid: #a05a00;
+  --sd-low: #2e7d32;
+  color-scheme: light;
+}
+
+[data-theme="solarized"] {
+  --sd-bg: #eee8d5;
+  --sd-surface: #fdf6e3;
+  --sd-sunk: #e6dfc8;
+  --sd-line: #d9d2bd;
+  --sd-ink: #073642;
+  --sd-muted: #586e75;
+  --sd-accent: #268bd2;
+  --sd-accent-ink: #fdf6e3;
+  --sd-accent-text: #1f6fa8;
+  --sd-accent-soft: rgba(38,139,210,.15);
+  --sd-nav: #073642;
+  --sd-nav-ink: #93a1a1;
+  --sd-nav-brand: #fdf6e3;
+  --sd-high: #dc322f;
+  --sd-mid: #b58900;
+  --sd-low: #859900;
+  color-scheme: light;
+}
+
+[data-theme="midnight"] {
+  --sd-bg: #10181f;
+  --sd-surface: #18232c;
+  --sd-sunk: #213039;
+  --sd-line: #2c3c47;
+  --sd-ink: #e6edf2;
+  --sd-muted: #9aaab6;
+  --sd-accent: #ef6a4f;
+  --sd-accent-ink: #ffffff;
+  --sd-accent-text: #ff8a70;
+  --sd-accent-soft: rgba(239,106,79,.18);
+  --sd-nav: #0b1217;
+  --sd-nav-ink: #9aaab6;
+  --sd-nav-brand: #ffffff;
+  --sd-high: #ff6b6b;
+  --sd-mid: #f0a43a;
+  --sd-low: #4cc38a;
+  color-scheme: dark;
+}
+
+[data-theme="frappe"] {
+  --sd-bg: #292c3c;
+  --sd-surface: #303446;
+  --sd-sunk: #414559;
+  --sd-line: #51576d;
+  --sd-ink: #c6d0f5;
+  --sd-muted: #a5adce;
+  --sd-accent: #babbf1;
+  --sd-accent-ink: #303446;
+  --sd-accent-text: #babbf1;
+  --sd-accent-soft: rgba(186,187,241,.18);
+  --sd-nav: #232634;
+  --sd-nav-ink: #a5adce;
+  --sd-nav-brand: #c6d0f5;
+  --sd-high: #e78284;
+  --sd-mid: #e5c890;
+  --sd-low: #a6d189;
+  color-scheme: dark;
+}
+
+[data-theme="mocha"] {
+  --sd-bg: #181825;
+  --sd-surface: #1e1e2e;
+  --sd-sunk: #313244;
+  --sd-line: #45475a;
+  --sd-ink: #cdd6f4;
+  --sd-muted: #a6adc8;
+  --sd-accent: #cba6f7;
+  --sd-accent-ink: #1e1e2e;
+  --sd-accent-text: #cba6f7;
+  --sd-accent-soft: rgba(203,166,247,.18);
+  --sd-nav: #11111b;
+  --sd-nav-ink: #a6adc8;
+  --sd-nav-brand: #cdd6f4;
+  --sd-high: #f38ba8;
+  --sd-mid: #f9e2af;
+  --sd-low: #a6e3a1;
+  color-scheme: dark;
+}
+
+[data-theme="nord"] {
+  --sd-bg: #2e3440;
+  --sd-surface: #3b4252;
+  --sd-sunk: #434c5e;
+  --sd-line: #4c566a;
+  --sd-ink: #eceff4;
+  --sd-muted: #b4bccb;
+  --sd-accent: #88c0d0;
+  --sd-accent-ink: #2e3440;
+  --sd-accent-text: #88c0d0;
+  --sd-accent-soft: rgba(136,192,208,.18);
+  --sd-nav: #272c36;
+  --sd-nav-ink: #c0c8d6;
+  --sd-nav-brand: #eceff4;
+  --sd-high: #e0828a;
+  --sd-mid: #ebcb8b;
+  --sd-low: #a3be8c;
+  color-scheme: dark;
+}
+
+[data-theme="dracula"] {
+  --sd-bg: #21222c;
+  --sd-surface: #282a36;
+  --sd-sunk: #343746;
+  --sd-line: #44475a;
+  --sd-ink: #f8f8f2;
+  --sd-muted: #a4abcf;
+  --sd-accent: #bd93f9;
+  --sd-accent-ink: #21222c;
+  --sd-accent-text: #caa9fa;
+  --sd-accent-soft: rgba(189,147,249,.2);
+  --sd-nav: #191a21;
+  --sd-nav-ink: #a4abcf;
+  --sd-nav-brand: #f8f8f2;
+  --sd-high: #ff6e6e;
+  --sd-mid: #ffb86c;
+  --sd-low: #50fa7b;
+  color-scheme: dark;
+}
+
+[data-theme="gruvbox"] {
+  --sd-bg: #1d2021;
+  --sd-surface: #282828;
+  --sd-sunk: #3c3836;
+  --sd-line: #504945;
+  --sd-ink: #ebdbb2;
+  --sd-muted: #a89984;
+  --sd-accent: #fe8019;
+  --sd-accent-ink: #282828;
+  --sd-accent-text: #fe8019;
+  --sd-accent-soft: rgba(254,128,25,.18);
+  --sd-nav: #1d2021;
+  --sd-nav-ink: #a89984;
+  --sd-nav-brand: #ebdbb2;
+  --sd-high: #fb4934;
+  --sd-mid: #fabd2f;
+  --sd-low: #b8bb26;
+  color-scheme: dark;
+}
+
+[data-theme="tokyo"] {
+  --sd-bg: #16161e;
+  --sd-surface: #1a1b26;
+  --sd-sunk: #24283b;
+  --sd-line: #2f3549;
+  --sd-ink: #c0caf5;
+  --sd-muted: #9aa5ce;
+  --sd-accent: #7aa2f7;
+  --sd-accent-ink: #16161e;
+  --sd-accent-text: #7aa2f7;
+  --sd-accent-soft: rgba(122,162,247,.18);
+  --sd-nav: #13131a;
+  --sd-nav-ink: #9aa5ce;
+  --sd-nav-brand: #c0caf5;
+  --sd-high: #f7768e;
+  --sd-mid: #e0af68;
+  --sd-low: #9ece6a;
+  color-scheme: dark;
+}
+
+/* ---------- 2. Tokens → Bootstrap variables ---------- */
+:root {
+  --bs-body-bg: var(--sd-bg);
+  --bs-body-color: var(--sd-ink);
+  --bs-body-font-family: var(--sd-font);
+  --bs-border-color: var(--sd-line);
+  --bs-secondary-color: var(--sd-muted);
+  --bs-tertiary-bg: var(--sd-sunk);
+  --bs-emphasis-color: var(--sd-ink);
+  --bs-border-radius: var(--sd-radius-sm);
+  --bs-border-radius-lg: var(--sd-radius);
+  --bs-link-color: var(--sd-accent-text);
+  --bs-link-hover-color: var(--sd-ink);
+  --bs-focus-ring-color: var(--sd-accent-soft);
+}
+body { font-feature-settings: "tnum"; }
+
+.card { --bs-card-bg: var(--sd-surface); --bs-card-border-color: var(--sd-line); }
+.modal { --bs-modal-bg: var(--sd-surface); --bs-modal-border-color: var(--sd-line); }
+.toast { --bs-toast-bg: var(--sd-surface); --bs-toast-border-color: var(--sd-line); --bs-toast-color: var(--sd-ink); }
+.progress { --bs-progress-bg: var(--sd-sunk); --bs-progress-bar-bg: var(--sd-accent); --bs-progress-height: .4rem; }
+
+.btn-primary {
+  --bs-btn-bg: var(--sd-accent);
+  --bs-btn-border-color: var(--sd-accent);
+  --bs-btn-color: var(--sd-accent-ink);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--sd-accent) 85%, var(--sd-ink));
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-hover-color: var(--sd-accent-ink);
+  --bs-btn-active-bg: color-mix(in srgb, var(--sd-accent) 75%, var(--sd-ink));
+  --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  --bs-btn-active-color: var(--sd-accent-ink);
+  --bs-btn-disabled-bg: var(--sd-accent);
+  --bs-btn-disabled-border-color: var(--sd-accent);
+  --bs-btn-disabled-color: var(--sd-accent-ink);
+  font-weight: 600;
+}
+.btn-outline-secondary {
+  --bs-btn-color: var(--sd-muted);
+  --bs-btn-border-color: var(--sd-line);
+  --bs-btn-hover-bg: var(--sd-sunk);
+  --bs-btn-hover-color: var(--sd-ink);
+  --bs-btn-hover-border-color: var(--sd-line);
+  --bs-btn-active-bg: var(--sd-surface);
+  --bs-btn-active-color: var(--sd-ink);
+  --bs-btn-active-border-color: var(--sd-ink);
+}
+.btn-link { --bs-btn-color: var(--sd-muted); --bs-btn-hover-color: var(--sd-ink); text-decoration: none; }
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--sd-accent-text);
+  box-shadow: 0 0 0 .2rem var(--sd-accent-soft);
+}
+.form-check-input:checked { background-color: var(--sd-accent-text); border-color: var(--sd-accent-text); }
+.form-check-input:focus { border-color: var(--sd-accent-text); box-shadow: 0 0 0 .2rem var(--sd-accent-soft); }
+
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--sd-surface);
+  --bs-nav-pills-link-active-color: var(--sd-ink);
+  --bs-nav-link-color: var(--sd-muted);
+  --bs-nav-link-hover-color: var(--sd-ink);
+}
+
+/* ---------- 3. Common header / navigation (same markup on every page) ---------- */
+.sd-navbar { background: var(--sd-nav); }
+.sd-navbar .navbar-brand { color: var(--sd-nav-brand); font-weight: 700; display: flex; align-items: center; gap: .6rem; }
+.sd-brand-mark {
+  display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  background: var(--sd-accent); color: var(--sd-accent-ink); font-size: .85rem;
+}
+.sd-navbar .nav-link { color: var(--sd-nav-ink); border-radius: var(--sd-radius-sm); padding: .4rem .75rem; font-size: .92rem; }
+.sd-navbar .nav-link:hover { color: var(--sd-nav-brand); }
+.sd-navbar .nav-link.active { background: var(--sd-accent); color: var(--sd-accent-ink); font-weight: 600; }
+.sd-navbar .navbar-toggler { border-color: var(--sd-line); }
+.sd-navbar .navbar-toggler-icon {
+  background-image: none;
+  background-color: var(--sd-nav-ink);
+  -webkit-mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='black' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='black' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") center / contain no-repeat;
+}
+
+/* ---------- 4. Shared bits other pages can reuse ---------- */
+.sd-page-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+.sd-eyebrow { font-size: .78rem; font-weight: 600; letter-spacing: .06em; color: var(--sd-accent-text); }
+.sd-stat-label { font-size: .8rem; color: var(--sd-muted); }
+.sd-stat-value { font-size: 1.6rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.sd-stat-value small { font-size: .85rem; font-weight: 400; color: var(--sd-muted); margin-left: .25rem; }
+
+/* ---------- ⚙ settings button + panel (js/settings.js) ---------- */
+.sd-gear { color: var(--sd-nav-ink); border: 1px solid transparent; padding: .35rem .45rem; line-height: 1; border-radius: var(--sd-radius-sm); }
+.sd-gear:hover, .sd-gear:focus-visible { color: var(--sd-nav-brand); border-color: color-mix(in srgb, var(--sd-nav-ink) 40%, transparent); }
+.sd-settings { --bs-offcanvas-width: 380px; --bs-offcanvas-bg: var(--sd-surface); --bs-offcanvas-color: var(--sd-ink); --bs-offcanvas-border-color: var(--sd-line); }
+.sd-set-section + .sd-set-section { border-top: 1px solid var(--sd-line); margin-top: 1.25rem; padding-top: 1.25rem; }
+.sd-set-title { font-size: .95rem; font-weight: 700; margin-bottom: .6rem; }
+.sd-set-sub { font-size: .75rem; font-weight: 600; letter-spacing: .04em; color: var(--sd-muted); margin-bottom: .4rem; }
+.sd-set-status { color: var(--sd-low); }
+.sd-set-status:empty { display: none; }
+.sd-set-status.is-error { color: var(--sd-high); }
+
+.sd-swatches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.sd-swatch { display: grid; gap: .3rem; padding: .3rem; border: 2px solid transparent; border-radius: var(--sd-radius); background: none; color: var(--sd-ink); text-align: center; }
+.sd-swatch:hover { border-color: var(--sd-line); }
+.sd-swatch.is-active { border-color: var(--sd-accent-text); }
+.sd-swatch:focus-visible { outline: 2px solid var(--sd-accent-text); outline-offset: 1px; }
+.sd-swatch-name { font-size: .75rem; font-weight: 500; }
+.sd-swatch.is-active .sd-swatch-name { font-weight: 700; color: var(--sd-accent-text); }
+/* the preview uses ITS theme's tokens (data-theme on the element) */
+.sd-swatch-preview {
+  position: relative; display: block; height: 3.4rem; border-radius: 6px; overflow: hidden;
+  background: var(--sd-bg); border: 1px solid var(--sd-line);
+}
+.sd-sw-nav { position: absolute; inset: 0 0 auto 0; height: .7rem; background: var(--sd-nav); }
+.sd-sw-card { position: absolute; left: .35rem; right: .35rem; top: 1rem; bottom: .35rem; background: var(--sd-surface); border-radius: 4px; }
+.sd-sw-accent { position: absolute; left: .6rem; top: 1.3rem; width: 1.5rem; height: .55rem; border-radius: 99px; background: var(--sd-accent); }
+.sd-sw-line { position: absolute; left: .6rem; right: .9rem; top: 2.15rem; height: .3rem; border-radius: 99px; background: var(--sd-ink); opacity: .55; }
+
+.sd-accent-presets { display: flex; flex-wrap: wrap; gap: .35rem; }
+.sd-accent-dot { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--sd-surface); box-shadow: 0 0 0 1px var(--sd-line); padding: 0; }
+.sd-accent-dot.is-active { box-shadow: 0 0 0 2px var(--sd-ink); }
+.form-control-color { width: 2.6rem; height: 2.2rem; padding: .2rem; }
+
+/* today's date, top right of every page header (filled by storage.js) */
+.sd-today { font-size: .85rem; color: var(--sd-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+header > .sd-today { align-self: flex-start; padding-top: .1rem; }
+
+/* priority colors — used by Todo, Calendar, Dashboard */
+.sd-pri { font-weight: 600; }
+.sd-pri-high { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.sd-pri-mid  { color: var(--sd-mid);  background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.sd-pri-low  { color: var(--sd-low);  background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
+.sd-subj { color: var(--sd-muted); background: var(--sd-sunk); font-weight: 500; }
+
+/* links: Bootstrap 5.3 colors <a> via --bs-link-color-rgb, so set the color directly */
+a { color: var(--sd-accent-text); }
+a:hover { color: var(--sd-ink); }
+
+/* shared card bits — Main, Dashboard, Calendar, Timer, Progress */
+.sd-section-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.sd-stat-note { font-size: .78rem; color: var(--sd-muted); margin-top: .35rem; }
+.sd-empty { color: var(--sd-muted); font-size: .9rem; }
+.sd-more { font-size: .85rem; color: var(--sd-accent-text); text-decoration: none; }
+.sd-more:hover, .sd-more:focus-visible { color: var(--sd-ink); text-decoration: underline; }
+
+/* D-Day list — Main, Dashboard, Calendar */
+.sd-dday-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.sd-dday-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.sd-dday-name { min-width: 0; font-weight: 500; }
+.sd-dday-date { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
+.sd-dday-badge {
+  flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .9rem;
+  padding: .2rem .6rem; border-radius: 999px; background: var(--sd-accent-soft); color: var(--sd-accent-text);
+}
+.sd-dday-badge.is-today { background: var(--sd-accent); color: var(--sd-accent-ink); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

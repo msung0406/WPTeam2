@@ -1,0 +1,50 @@
+/* =========================================================
+   Timer page only. Colors come from var(--sd-*) tokens in style.css.
+   ========================================================= */
+
+/* ---------- mode / phase tabs ---------- */
+.sd-mode-tabs .btn { min-width: 6.5rem; }
+.sd-phase-tabs .btn { white-space: nowrap; }
+.sd-mode-tabs .btn.active,
+.sd-phase-tabs .btn.active { background: var(--sd-accent-soft); color: var(--sd-accent-text); border-color: var(--sd-accent-text); font-weight: 600; }
+.sd-mode-tabs .btn:disabled,
+.sd-phase-tabs .btn:disabled { opacity: .5; }
+
+/* ---------- clock ---------- */
+.sd-clock-wrap { padding: 1.25rem 0 1rem; text-align: center; }
+.sd-clock {
+  font-size: clamp(3.4rem, 16vw, 6.5rem); font-weight: 600; line-height: 1;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--sd-ink);
+}
+.sd-clock.is-break { color: var(--sd-low); }
+.sd-clock.is-paused { color: var(--sd-muted); }
+.sd-clock-status { margin: .75rem 0 .9rem; color: var(--sd-muted); font-size: .95rem; }
+
+.sd-phase-progress { max-width: 22rem; margin: 0 auto; }
+.sd-phase-progress.is-break { --bs-progress-bar-bg: var(--sd-low); }
+
+/* ---------- buttons ---------- */
+.sd-timer-controls { display: flex; justify-content: center; flex-wrap: wrap; gap: .6rem; }
+.sd-timer-controls .btn { min-width: 8rem; }
+.sd-timer-notice { min-height: 1.5rem; margin: .75rem 0 0; text-align: center; font-size: .9rem; color: var(--sd-accent-text); }
+
+/* ---------- pomodoro minutes ---------- */
+.sd-minutes { border-top: 1px solid var(--sd-line); padding-top: 1rem; }
+.sd-minutes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-bottom: .5rem; }
+.sd-minutes-field { display: grid; gap: .25rem; font-size: .8rem; color: var(--sd-muted); }
+.sd-minutes-field .form-control { text-align: center; font-variant-numeric: tabular-nums; }
+
+/* ---------- recent logs ---------- */
+.sd-log-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .65rem; }
+.sd-log-item { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
+.sd-log-body { min-width: 0; display: grid; gap: .2rem; }
+.sd-log-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .8rem; color: var(--sd-muted); }
+.sd-log-task { font-size: .85rem; }
+.sd-log-side { flex-shrink: 0; display: grid; justify-items: end; line-height: 1.3; }
+.sd-log-minutes { font-weight: 600; font-variant-numeric: tabular-nums; }
+.sd-log-date { font-size: .75rem; color: var(--sd-muted); }
+
+@media (max-width: 575.98px) {
+  .sd-mode-tabs { width: 100%; }
+  .sd-timer-controls .btn { flex: 1; min-width: 0; }
+}

@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Obsidian (this folder lives inside the vault)
+.obsidian/
+Web Programming - *.md
+
+# tooling
+node_modules/

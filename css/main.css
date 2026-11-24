@@ -1,0 +1,62 @@
+/* =========================================================
+   Dashboard (index.html) only. Day list + week strip: components.css.
+   ========================================================= */
+#todayList:empty { display: none; }
+
+/* header: greeting + highlighted date on the left · button on the right (under the text on phones) */
+.sd-dash-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; }
+.sd-dash-title { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; }
+.sd-dash-header .sd-today {
+  display: inline-flex; align-items: baseline; gap: .4rem;
+  padding: .3rem .85rem; border-radius: 999px;
+  background: var(--sd-accent-soft); color: var(--sd-accent-text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-accent-text) 35%, transparent);
+  font-size: clamp(1.05rem, .9rem + .6vw, 1.35rem); font-weight: 700; letter-spacing: -.01em; line-height: 1.3;
+}
+.sd-dash-header .sd-today-pre { font-size: .72em; font-weight: 600; opacity: .85; }
+.sd-dash-header .sd-today-sep { display: none; }
+
+
+/* ---------- Timer heatmap (js/heatmap.js) ---------- */
+.sd-heat, .sd-heat-legend {
+  --lv0: var(--sd-sunk);
+  --lv1: color-mix(in srgb, var(--sd-accent) 30%, var(--sd-sunk));
+  --lv2: color-mix(in srgb, var(--sd-accent) 55%, var(--sd-sunk));
+  --lv3: color-mix(in srgb, var(--sd-accent) 80%, var(--sd-sunk));
+  --lv4: var(--sd-accent-text);
+}
+.sd-heat-summary { font-size: .85rem; color: var(--sd-muted); }
+.sd-heat-summary b { color: var(--sd-ink); font-weight: 600; }
+#heatSubject { width: auto; max-width: 12rem; }
+
+.sd-heat-scroll { overflow-x: auto; padding-bottom: .25rem; }
+/* cells stretch to the card width; below ~700px the grid scrolls sideways inside the card */
+.sd-heat {
+  display: grid; min-width: 44rem;
+  grid-template-columns: 1.4rem repeat(var(--weeks), minmax(0, 1fr));
+  gap: 3px;
+}
+.sd-heat-month { font-size: .68rem; color: var(--sd-muted); white-space: nowrap; line-height: 1.2; padding-bottom: 2px; }
+.sd-heat-dow { font-size: .62rem; color: var(--sd-muted); align-self: center; line-height: 1; }
+.sd-heat-cell { display: block; aspect-ratio: 1; border-radius: 2px; background: var(--lv0); }
+.sd-heat-legend i { display: block; width: 11px; height: 11px; border-radius: 2px; background: var(--lv0); }
+.sd-heat .lv1, .sd-heat-legend .lv1 { background: var(--lv1); }
+.sd-heat .lv2, .sd-heat-legend .lv2 { background: var(--lv2); }
+.sd-heat .lv3, .sd-heat-legend .lv3 { background: var(--lv3); }
+.sd-heat .lv4, .sd-heat-legend .lv4 { background: var(--lv4); }
+.sd-heat .is-out { visibility: hidden; }
+.sd-heat .is-future { opacity: .45; }
+.sd-heat .is-today { outline: 2px solid var(--sd-ink); outline-offset: 0; }
+.sd-heat-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: .75rem; color: var(--sd-muted); }
+.sd-heat-legend span { margin: 0 .2rem; }
+
+/* ---------- 과목 관리 ---------- */
+.sd-subject-box { background: var(--sd-bg); border-radius: var(--sd-radius-sm); padding: .75rem; }
+.sd-subject-box .sd-quick { max-width: 22rem; }
+.sd-subject-list { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+.sd-subject-list:empty { display: none; }
+.sd-subject-chip {
+  display: inline-flex; align-items: center; gap: .25rem; padding: .15rem .25rem .15rem .6rem;
+  border-radius: 99px; background: var(--sd-surface); border: 1px solid var(--sd-line); font-size: .82rem;
+}
+.sd-subject-chip button { border: 0; background: none; color: var(--sd-muted); font-size: .78rem; padding: 0 .35rem; border-radius: 99px; }
+.sd-subject-chip button:hover, .sd-subject-chip button:focus-visible, .sd-subject-chip button.is-confirm { color: var(--sd-high); }

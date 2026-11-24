@@ -1,0 +1,127 @@
+/* =========================================================
+   Shared components (js/views.js, js/todoform.js)
+   Day list · week strip · to-do form · badges.
+   Loaded by Main, Calendar · Todo, Planner. Colors = style.css tokens only.
+   Maintainer: 김주환
+   ========================================================= */
+
+/* ---------- kind colors (Calendar chips, day list, week strip) ---------- */
+.sd-kind-schedule { --kind: var(--sd-ink); }
+.sd-kind-deadline { --kind: var(--sd-high); }
+.sd-kind-dday     { --kind: var(--sd-mid); }
+.sd-kind-task, .sd-kind-todo { --kind: var(--sd-low); }
+.sd-kind-daily    { --kind: var(--sd-mid); }
+.sd-kind-due      { --kind: var(--sd-high); }
+.sd-kind-session  { --kind: var(--sd-accent-text); }
+
+.sd-hint { color: var(--sd-muted); font-weight: 400; }
+.sd-count { background: var(--sd-accent-soft); color: var(--sd-accent-text); font-weight: 600; }
+
+/* ---------- badges ---------- */
+.sd-kind { color: var(--kind); background: color-mix(in srgb, var(--kind) 13%, transparent); }
+.sd-type { background: var(--sd-sunk); color: var(--sd-ink); }
+.sd-type-exam { background: color-mix(in srgb, var(--sd-high) 13%, transparent); color: var(--sd-high); }
+.sd-type-project { background: var(--sd-accent-soft); color: var(--sd-accent-text); }
+.sd-block { font-weight: 600; background: var(--sd-sunk); color: var(--sd-ink); }
+.sd-block-day { background: var(--sd-accent); color: var(--sd-accent-ink); }
+.sd-reason { font-weight: 600; }
+.sd-reason-overdue { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.sd-reason-due { color: var(--sd-mid); background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.sd-reason-catchup, .sd-reason-fallback { color: var(--sd-accent-text); background: var(--sd-accent-soft); }
+.sd-reason-early { color: var(--sd-low); background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
+
+/* ---------- day list ---------- */
+.sd-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.sd-row {
+  display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); gap: .65rem; align-items: start;
+  padding: .55rem .7rem; border-radius: var(--sd-radius-sm); background: var(--sd-bg); border-left: 3px solid var(--kind, var(--sd-line));
+}
+.sd-row-todo { --kind: var(--sd-low); }
+.sd-row-daily { --kind: var(--sd-mid); }
+.sd-row-due { --kind: var(--sd-high); }
+.sd-row-session, .sd-row-studied { --kind: var(--sd-accent-text); }
+.sd-row .form-check-input { width: 1.2rem; height: 1.2rem; margin: .1rem 0 0; cursor: pointer; }
+.sd-row-mark { width: 1.2rem; text-align: center; color: var(--sd-muted); font-weight: 700; line-height: 1.5; }
+.sd-row-body { min-width: 0; }
+.sd-row-title { display: block; font-weight: 500; overflow-wrap: anywhere; cursor: pointer; text-align: left; }
+button.sd-row-title { background: none; border: 0; padding: 0; color: inherit; }
+button.sd-row-title:hover, button.sd-row-title:focus-visible { color: var(--sd-accent-text); text-decoration: underline; }
+.sd-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-top: .2rem; font-size: .75rem; color: var(--sd-muted); }
+.sd-row-meta .badge { font-size: .68rem; }
+.sd-row-due { font-variant-numeric: tabular-nums; }
+.sd-row.is-done { opacity: .6; }
+.sd-row.is-done .sd-row-title { text-decoration: line-through; }
+.sd-row-studied.is-done { opacity: .75; }
+.sd-row-studied.is-done .sd-row-title { text-decoration: none; }
+.sd-rows-empty { color: var(--sd-muted); font-size: .9rem; margin: 0; }
+
+.sd-row.has-finish { grid-template-columns: 1.2rem minmax(0, 1fr) auto; }
+.sd-row-finish { font-size: .72rem; padding: .1rem .5rem; align-self: center; }
+
+/* new class inline input (Views.subjectPicker) */
+.sd-newsub { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .3rem; margin-top: .35rem; }
+
+/* quick add (Main, Calendar day) */
+.sd-quick { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem; }
+
+/* ---------- week strip ---------- */
+.sd-wstrip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .4rem; }
+.sd-wday {
+  display: flex; flex-direction: column; gap: .3rem; min-width: 0; min-height: 8.5rem; padding: .5rem .45rem;
+  background: var(--sd-bg); border: 1px solid transparent; border-radius: var(--sd-radius-sm); color: var(--sd-ink); text-decoration: none;
+}
+.sd-wday:hover, .sd-wday:focus-visible { border-color: var(--sd-accent-text); color: var(--sd-ink); }
+.sd-wday.is-today { background: var(--sd-surface); border-color: var(--sd-accent-text); box-shadow: inset 0 3px 0 var(--sd-accent); }
+.sd-wday.is-past { opacity: .7; }
+.sd-wday.is-break { background: var(--sd-accent-soft); border-style: dashed; border-color: var(--sd-line); }
+.sd-wday-head { display: flex; justify-content: space-between; align-items: baseline; font-size: .8rem; color: var(--sd-muted); }
+.sd-wday-head b { color: var(--sd-ink); }
+.sd-wday.is-today .sd-wday-head b { color: var(--sd-accent-text); }
+.sd-wday-num { font-variant-numeric: tabular-nums; }
+.sd-wday-chips { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sd-chip-ev, .sd-chip-st {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: .7rem; line-height: 1.4; padding: 1px 5px; border-radius: 4px;
+}
+.sd-chip-ev { font-weight: 600; }
+.sd-chip-ev i { font-style: normal; font-weight: 400; opacity: .8; }
+.sd-chip-schedule { color: var(--sd-ink); background: color-mix(in srgb, var(--sd-ink) 10%, transparent); }
+.sd-chip-deadline { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.sd-chip-dday { color: var(--sd-mid); background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.sd-chip-st { display: flex; justify-content: space-between; gap: .25rem; background: var(--sd-sunk); color: var(--sd-ink); }
+.sd-chip-st.sd-block-day { background: var(--sd-accent); color: var(--sd-accent-ink); }
+.sd-chip-st.is-done { opacity: .55; }
+.sd-chip-st.is-early { border: 1px dashed var(--sd-line); background: transparent; }
+.sd-chip-st-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sd-chip-st-h { flex-shrink: 0; opacity: .8; }
+.sd-wday-tag { font-size: .7rem; color: var(--sd-muted); }
+.sd-wday-empty { font-size: .75rem; color: var(--sd-muted); }
+.sd-wday-total { margin-top: auto; font-size: .7rem; color: var(--sd-muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- to-do form ---------- */
+.sd-editing-badge { font-size: .7rem; color: var(--sd-accent-text); background: var(--sd-accent-soft); }
+.sd-pri-btn, .sd-size-btn { font-size: .82rem; padding-inline: .25rem; }
+.btn-check:checked + .sd-pri-btn.sd-pri-high { color: var(--sd-high); border-color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
+.btn-check:checked + .sd-pri-btn.sd-pri-mid  { color: var(--sd-mid);  border-color: var(--sd-mid);  background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
+.btn-check:checked + .sd-pri-btn.sd-pri-low  { color: var(--sd-low);  border-color: var(--sd-low);  background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
+.btn-check:checked + .sd-size-btn { background: var(--sd-accent); border-color: var(--sd-accent-text); color: var(--sd-accent-ink); font-weight: 600; }
+.btn-check:not(:checked) + .sd-pri-btn, .btn-check:not(:checked) + .sd-size-btn { background: var(--sd-surface); }
+.sd-tform-plan { border-top: 1px dashed var(--sd-line); padding-top: .75rem; margin-top: .25rem; }
+.sd-tform-lock { color: var(--sd-accent-text); }
+.sd-size-hint { font-size: .8rem; color: var(--sd-muted); display: grid; gap: .15rem; }
+.sd-hint-rule { color: var(--sd-ink); font-weight: 500; }
+.sd-hint-dates { font-variant-numeric: tabular-nums; }
+.sd-hint-factor, .sd-hint-after { color: var(--sd-accent-text); font-weight: 500; }
+.sd-hint-early { color: var(--sd-muted); }
+.sd-tune-toggle { font-size: .8rem; color: var(--sd-accent-text); text-decoration: none; }
+.sd-tune { border-top: 1px dashed var(--sd-line); margin-top: .35rem; }
+.sd-tune .form-control::placeholder { color: var(--sd-muted); opacity: .7; }
+
+/* ---------- phones ---------- */
+@media (max-width: 767.98px) {
+  .sd-wstrip { grid-template-columns: minmax(0, 1fr); gap: .3rem; }
+  .sd-wday { min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+  .sd-wday-head { width: 3.2rem; flex-direction: column; gap: 0; }
+  .sd-wday-chips { flex: 1; }
+  .sd-wday-total { margin-top: 0; width: 100%; padding-left: 3.5rem; }
+}
