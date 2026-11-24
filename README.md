@@ -4,9 +4,9 @@
 | 페이지 | 파일 | 내용 |
 |---|---|---|
 | Main | index.html · js/main.js | 오늘 날짜 · 오늘 할 일 목록 · 오늘 공부 시간 · 이번 주 달력 (일정 + 계획된 공부) |
-| Dashboard | dashboard.html · js/dashboard.js | 1월 1일부터 과목별 GitHub 잔디 · 기준 전환 (Timer 기록 / 계획 체크) |
-| Calendar · Todo | calendar.html · js/calendar.js | 월 달력 (일정 · 마감 · 할 일 · 공부) · 날짜 클릭 → 일정/할 일 수정 + 그날 목록 |
-| Planner | planner.html · js/planner-page.js | 앞으로 14일 계획 (주간 계획 / 계획된 할 일) · 플래너 설정 · 쉬는 날 |
+| Dashboard | dashboard.html · js/dashboard.js | 내 과목 추가/삭제 · 1월 1일부터 과목별 GitHub 잔디 · 기준 전환 (Timer 기록 / 계획 체크) |
+| Calendar · Todo | calendar.html · js/calendar.js | 월 달력 (일정 · 마감 · 할 일 · 공부) · 날짜 클릭 → 일정/할 일 수정 + 그날 목록 · 할 일 추가 (할 일 / 매일 할 일) |
+| Planner | planner.html · js/planner-page.js | 앞으로 14일 계획 (주간 계획 / 계획된 할 일) · 계획 수정 (Calendar · Todo에서 온 것만) · 플래너 설정 · 쉬는 날 |
 | Timer | timer.html · js/timer.js | 스톱워치 · 뽀모도로 → studyLogs |
 
 Progress 페이지는 없앰 (내용은 Dashboard · Main으로). 캘린더 구독(Google 등)은 브라우저만으로는 CORS 때문에 불가 → 향후 기능.
@@ -49,10 +49,17 @@ study-dashboard/
 Header/Navigation은 아무 페이지의 `<nav>` 블록을 그대로 복사하고 `active` + `aria-current="page"`만 옮기면 됨.
 메뉴 순서: Main · Dashboard · Calendar · Todo · Planner · Timer.
 
-## 할 일 = 두 종류 (v5 `task.planned`)
+## 할 일 = 세 종류 (v5 `task.planned`, v6 `task.repeat`)
 - **그냥 할 일** (`planned: false`): 그 날짜에만 보임. Calendar · Todo의 폼 기본값, Main의 빠른 추가.
 - **계획된 할 일** (`planned: true`): 폼에서 "플래너에 추가"를 켜면 종류 · 작업량 · 세부 조정이 나오고, 플래너가 마감 전에 공부 세션을 나눠 잡음. 세션은 Calendar · Main 이번 주 · Main 오늘 목록에 보임.
+- **매일 할 일** (`repeat: "daily"`): 시작일(`date`)부터 매일 목록에 나옴. 날마다 체크 (`doneDates`, `SD.toggleDaily(id, ymd, done)`). 미래 날짜는 체크 불가, 플래너에 안 들어감, 달력 칸에는 표시 안 함 (목록에만).
 - 캘린더 마감(`kind: "deadline"`)에서 온 할 일은 항상 계획됨. 예전 데이터(플래그 없음)도 계획됨으로 읽음.
+- **할 일을 만드는 곳은 Calendar · Todo뿐.** Planner는 거기서 온 계획된 할 일만 수정 (작업량 · 세부 조정 등). 새로 만들거나 삭제는 못 하고, "플래너에서 빼기" = 그냥 할 일로 돌아감.
+
+## 과목 = 내 과목 (v6, 키 `subjects`)
+- 처음엔 비어 있음. Dashboard의 '내 과목'에서 추가/삭제, 또는 과목 칸(할 일 · 일정 · Timer)에서 "+ 새 과목…".
+- `SD.getSubjects()` · `SD.addSubject(name)` · `SD.removeSubject(name)` · 과목 칸은 `Views.subjectPicker(select)`.
+- 과목 없음 = `''` (예전 '기타'도 `''`로 읽음). 과목을 삭제해도 할 일 · 기록의 과목 글자는 남고, 잔디만 사라짐.
 
 공통 부품
 ```js
@@ -69,7 +76,7 @@ const form = TodoForm.create(div, { plannerOnly, onSaved(msg, ymd) });  // form.
 - 예전 파스텔 (Catppuccin Latte): `<html lang="ko" data-theme="latte">`
 - 확정되면 토큰 블록만 바꾸면 전 페이지 반영.
 
-## 데이터 (storage.js v5)
+## 데이터 (storage.js v6)
 localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마다 쓰는 페이지는 하나.
 **예상 시간 입력은 없음** — 할 일은 작업량 1~5로 표시하고, 플래너가 마감일 전에 몇 시간짜리 세션을 배치함 (시험은 점점 길게).
 스키마·알고리즘 전체: `system-design.html` 2~5절.
@@ -80,7 +87,8 @@ localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마�
 | events | Calendar | `SD.getEvents()` · `SD.eventsOn(ymd)` · `SD.hasScheduleOn(ymd)` | `SD.saveEvents(arr)` |
 | ddays | Calendar | `SD.getDdays()` · `SD.allDdays()` (마감 D-Day 포함) | `SD.saveDdays(arr)` |
 | studyLogs | Timer | `SD.getStudyLogs()` | `SD.addStudyLog({ subject, minutes, taskId })` |
-| settings | Planner | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly })` |
+| settings | Planner |
+| subjects | 어디서나 (과목 칸 · Dashboard) | `SD.getSubjects()` | `SD.addSubject(name)` · `SD.removeSubject(name)` | `SD.getSettings()` | `SD.saveSettings({ shortDayHours, longDayHours, restDays, restNotes, week, startEarly })` |
 
 다른 페이지에서 할 일 상태 바꿀 때 (tasks에 직접 쓰지 말 것)
 | 상황 | 호출 |
@@ -102,7 +110,7 @@ events 형식
 ```js
 { id, kind: "schedule", title: "동아리 MT", date: "2026-11-14", start: "10:00", end: "18:00" }  // 시간은 선택, 표시용. 일정 있는 주말엔 종일 세션 안 잡음
 { id, kind: "deadline", title: "자율주행 퀴즈 3", date: "2026-11-16", type: "exam" | "project" | "assignment" | "general",
-  subject: "Autonomous Driving", size: 4 /* 1~5, 비우면 종류별 기본값 */, priority: "high", showDday: true }
+  subject: "자료구조" /* 내 과목, 없으면 "" */, size: 4 /* 1~5, 비우면 종류별 기본값 */, priority: "high", showDday: true }
 ```
 
 tasks 형식
@@ -140,7 +148,7 @@ tasks 형식
 - **과목별 학습 기록:** 완료한 시험의 실제 공부 시간 ÷ 계획 시간 평균(0.5~2배)을 같은 과목 다음 시험 시간에 곱함. 실제 시간 = 오늘의 계획에서 체크한 시간.
 
 기타
-- `SD.SUBJECTS` · `SD.TYPES` / `SD.TYPE_LABEL` · `SD.SIZES` / `SD.SIZE_LABEL` · `SD.PRIORITY_LABEL`
+- `SD.TYPES` / `SD.TYPE_LABEL` · `SD.SIZES` / `SD.SIZE_LABEL` · `SD.PRIORITY_LABEL`
 - `SD.date.today()` · `.addDays(ymd, n)` · `.diff(a, b)` · `.parse(ymd)` · `.toYMD(date)` · `.dow(ymd)`
 - `SD.hoursOn(task, ymd)` · `SD.totalHours(task)` 공부한 시간
 - `SD.newId()` id 생성 · `SD.onChange([SD.KEYS.tasks], fn)` 다른 탭 변경 감지

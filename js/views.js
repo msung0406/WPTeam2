@@ -36,7 +36,8 @@ const Views = (() => {
   const plannedHours = (it, ctx) => (it.block === 'day' ? ctx.settings.longDayHours : it.hours);
 
   /* ---------- rows of one day ----------
-     kind: 'todo'    plain to-do due that day (today also shows overdue ones)
+     kind: 'daily'   daily to-do (every day from its start date; ticked per day, not in the future)
+           'todo'    plain to-do due that day (today also shows overdue ones)
            'due'     planned task due that day (exam day / deadline)
            'session' planner session (today and later = forecast; only today can be ticked)
            'studied' past day: hours ticked that day                                      */
@@ -46,7 +47,9 @@ const Views = (() => {
     const past = ymd < ctx.today;
 
     if (!plannedOnly) {
-      ctx.active.filter(t => !t.planned && (t.date === ymd || (isToday && t.date < ymd && !t.completed)))
+      ctx.active.filter(t => SD.isDailyOn(t, ymd))
+        .forEach(t => rows.push({ kind: 'daily', task: t, checked: t.doneDates.includes(ymd), canTick: ymd <= ctx.today }));
+      ctx.active.filter(t => !t.planned && !t.repeat && (t.date === ymd || (isToday && t.date < ymd && !t.completed)))
         .sort((a, b) => a.completed - b.completed || a.date.localeCompare(b.date))
         .forEach(t => rows.push({ kind: 'todo', task: t, checked: t.completed, late: !t.completed && t.date < ctx.today }));
     }
@@ -66,7 +69,7 @@ const Views = (() => {
 
   // progress of a day's list (Main header + stat)
   function dayProgress(rows) {
-    const doable = rows.filter(r => r.kind !== 'studied' && !(r.kind === 'session' && !r.canTick));
+    const doable = rows.filter(r => r.kind !== 'studied' && !((r.kind === 'session' || r.kind === 'daily') && !r.canTick));
     return { done: doable.filter(r => r.checked).length, total: doable.length };
   }
 
@@ -89,7 +92,7 @@ const Views = (() => {
     li.classList.toggle('is-done', r.checked);
 
     const id = `row-${++rowSeq}`;
-    if (r.kind === 'studied' || (r.kind === 'session' && !r.canTick)) {
+    if (r.kind === 'studied' || (r.kind === 'session' && !r.canTick) || (r.kind === 'daily' && !r.canTick)) {
       li.append(make('span', 'sd-row-mark', r.kind === 'studied' ? '✓' : '·'));
     } else {
       const cb = make('input', 'form-check-input');
@@ -118,7 +121,9 @@ const Views = (() => {
 
     const meta = make('div', 'sd-row-meta');
     const badge = (cls, text) => meta.append(make('span', `badge ${cls}`, text));
-    if (r.kind === 'todo') {
+    if (r.kind === 'daily') {
+      badge('sd-kind sd-kind-daily', '매일');
+    } else if (r.kind === 'todo') {
       badge('sd-kind sd-kind-todo', '할 일');
       if (r.late) badge('sd-reason sd-reason-overdue', `${md(t.date)} 마감 · 지남`);
     } else if (r.kind === 'due') {
@@ -135,7 +140,7 @@ const Views = (() => {
       badge('sd-kind sd-kind-session', '공부함');
       badge('sd-block', fmtH(r.hours));
     }
-    if (t.subject && t.subject !== '기타') badge('sd-subj', t.subject);
+    if (t.subject) badge('sd-subj', t.subject);
     body.append(meta);
     li.append(body);
     if (opts.finish && r.kind === 'session' && r.canTick) {
@@ -158,7 +163,10 @@ const Views = (() => {
       if (!li) return;
       const id = Number(li.dataset.id);
       const ctx = getCtx();
-      if (li.dataset.kind === 'session') {
+      if (li.dataset.kind === 'daily') {
+        SD.toggleDaily(id, ul.dataset.ymd, cb.checked);
+        after(cb.checked ? '오늘 몫을 끝냈어요.' : '체크를 풀었어요.');
+      } else if (li.dataset.kind === 'session') {
         const it = (ctx.plan.days[ctx.today] || []).find(i => i.taskId === id && i.block === cb.dataset.block);
         const planned = it ? plannedHours(it, ctx) : 1;
         SD.toggleSession(id, ctx.today, cb.checked, Math.max(0.5, planned - (it ? it.done : 0)));
@@ -228,5 +236,55 @@ const Views = (() => {
     return { start, end: D.addDays(start, 6) };
   }
 
-  return { DOW, fmtH, md, mdDow, weekStart, load, plannedHours, dayRows, dayProgress, renderDayList, bindDayList, renderWeekStrip };
+  /* ---------- class (subject) select with "+ 새 과목" ----------
+     Classes start empty; picking "+ 새 과목…" shows an inline input right under the select.
+     Views.subjectPicker(select, { onChange }) → { fill(selected) }              */
+  const NEW = '__new__';
+  function subjectPicker(select, { onChange = () => {} } = {}) {
+    const box = make('div', 'sd-newsub d-none');
+    const input = make('input', 'form-control form-control-sm');
+    Object.assign(input, { type: 'text', maxLength: 30, placeholder: '과목 이름 (예: 자료구조)', autocomplete: 'off' });
+    input.setAttribute('aria-label', '새 과목 이름');
+    const ok = make('button', 'btn btn-sm btn-primary', '추가');
+    const cancel = make('button', 'btn btn-sm btn-outline-secondary', '취소');
+    ok.type = cancel.type = 'button';
+    box.append(input, ok, cancel);
+    select.after(box);
+    let last = '';
+
+    function fill(selected = select.value === NEW ? last : select.value) {
+      const list = SD.getSubjects();
+      const opts = [new Option('과목 없음', '')];
+      list.forEach(s => opts.push(new Option(s, s)));
+      if (selected && !list.includes(selected)) opts.push(new Option(selected, selected));   // old text on an existing item
+      opts.push(new Option('+ 새 과목…', NEW));
+      select.replaceChildren(...opts);
+      select.value = selected || '';
+      last = select.value;
+    }
+    const close = () => { box.classList.add('d-none'); input.value = ''; };
+    function save() {
+      const name = SD.addSubject(input.value);
+      if (!name) { input.focus(); return; }
+      close();
+      fill(name);
+      onChange(name);
+    }
+    select.addEventListener('change', () => {
+      if (select.value === NEW) { box.classList.remove('d-none'); input.focus(); return; }
+      last = select.value;
+      close();
+      onChange(select.value);
+    });
+    ok.addEventListener('click', save);
+    cancel.addEventListener('click', () => { close(); select.value = last; });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); save(); }
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); select.value = last; }
+    });
+    fill('');
+    return { fill, value: () => (select.value === NEW ? last : select.value) };
+  }
+
+  return { DOW, fmtH, md, mdDow, weekStart, load, plannedHours, dayRows, dayProgress, renderDayList, bindDayList, renderWeekStrip, subjectPicker };
 })();

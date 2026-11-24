@@ -77,6 +77,20 @@
 
     <p class="sd-source-note small text-secondary mb-3" id="sourceNote"></p>
 
+    <!-- 내 과목 -->
+    <section class="card mb-3" aria-labelledby="subjectTitle"><div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="sd-section-title" id="subjectTitle">내 과목</h2>
+        <form class="sd-quick sd-subject-form" id="subjectForm" novalidate>
+          <label class="visually-hidden" for="subjectName">과목 이름</label>
+          <input class="form-control form-control-sm" id="subjectName" type="text" maxlength="30" placeholder="과목 추가 (예: 자료구조)" autocomplete="off">
+          <button class="btn btn-sm btn-primary" type="submit">추가</button>
+        </form>
+      </div>
+      <p class="small text-danger mb-0 mt-1" id="subjectStatus" role="status" aria-live="polite"></p>
+      <p class="sd-empty mb-0 mt-3 d-none" id="heatEmpty">아직 과목이 없어요. 여기서 추가하거나, 할 일 · 일정 · Timer의 과목 칸에서 "+ 새 과목"을 고르세요. 과목마다 잔디가 하나씩 생겨요.</p>
+    </div></section>
+
     <!-- 과목별 잔디 -->
     <div class="d-grid gap-3" id="heatmaps"></div>
 

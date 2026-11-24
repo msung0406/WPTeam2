@@ -35,3 +35,9 @@
 
 .sd-heat-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: .75rem; color: var(--sd-muted); }
 .sd-heat-legend span { margin: 0 .2rem; }
+
+/* ---------- classes ---------- */
+.sd-subject-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem; width: min(100%, 20rem); }
+#subjectStatus:empty { display: none; }
+.sd-heat-del { font-size: .78rem; color: var(--sd-muted); text-decoration: none; padding: 0; }
+.sd-heat-del:hover, .sd-heat-del:focus-visible, .sd-heat-del.is-confirm { color: var(--sd-high); }

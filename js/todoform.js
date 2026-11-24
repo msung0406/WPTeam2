@@ -1,9 +1,11 @@
 /* =========================================================
    Study Dashboard — shared to-do form (load after storage.js + planner.js)
-   Calendar · Todo: plain to-do by default, "플래너에 추가" switch (off) reveals
-                    type · size · 세부 조정 → the task gets study sessions.
-   Planner:         same form with the switch forced on (plannerOnly).
-     const form = TodoForm.create(rootEl, { plannerOnly, onSaved(msg) })
+   Calendar · Todo: [할 일 | 매일 할 일]. 할 일 = plain by default; the "플래너에 추가" switch (off)
+                    reveals type · size · 세부 조정 → the task gets study sessions.
+                    매일 할 일 = repeats every day from its start date (never planned).
+   Planner:         edit-only (editOnly + plannerOnly): changes planning of tasks that came
+                    from Calendar · Todo; can take a task out of the planner, can't create or delete.
+     const form = TodoForm.create(rootEl, { plannerOnly, editOnly, onSaved(msg) })
      form.edit(id) · form.reset() · form.setDate(ymd)
    Owner of writes: tasks (SD.saveTasks).
    Maintainer: 김주환
@@ -16,11 +18,17 @@ const TodoForm = (() => {
 
   // static markup only (no user text) → innerHTML is safe here
   const MARKUP = `
+  <div class="sd-tform-idle d-none" data-f="idle">
+    <h2 class="h6 fw-bold mb-2">계획 수정</h2>
+    <p class="small text-secondary mb-2">오른쪽에서 할 일을 누르면 여기서 작업량 · 세부 조정을 바꿀 수 있어요.</p>
+    <p class="small text-secondary mb-0">새 할 일은 <a href="calendar.html">Calendar · Todo</a>에서 추가하고 "플래너에 추가"를 켜세요. 캘린더 마감은 자동으로 들어와요.</p>
+  </div>
   <form class="sd-tform" novalidate>
     <h2 class="h6 fw-bold d-flex justify-content-between align-items-center mb-3">
       <span data-f="heading">할 일 추가</span>
       <span class="badge rounded-pill sd-editing-badge d-none" data-f="badge">수정 중</span>
     </h2>
+    <div class="btn-group w-100 mb-3" role="group" data-f="modeGroup"></div>
     <div class="mb-2">
       <label class="form-label small text-secondary" data-for="title">제목</label>
       <input type="text" class="form-control" data-f="title" maxlength="80" required placeholder="예: 자료구조 과제 제출" autocomplete="off">
@@ -42,6 +50,7 @@ const TodoForm = (() => {
       <div class="btn-group w-100" role="group" data-f="priGroup"></div>
     </div>
 
+    <p class="sd-hint small mb-2 d-none" data-f="dailyNote">시작일부터 매일 목록에 나와요. 날마다 따로 체크해요.</p>
     <div class="form-check form-switch mb-2" data-f="plannedWrap">
       <input class="form-check-input" type="checkbox" role="switch" data-f="planned">
       <label class="form-check-label small" data-for="planned">플래너에 추가 <span class="sd-hint">· 마감 전에 공부 시간을 나눠서 잡아 줘요</span></label>
@@ -95,7 +104,7 @@ const TodoForm = (() => {
 
   let formSeq = 0;
 
-  function create(root, { plannerOnly = false, onSaved = () => {} } = {}) {
+  function create(root, { plannerOnly = false, editOnly = false, onSaved = () => {} } = {}) {
     const uid = `tf${++formSeq}`;
     root.innerHTML = MARKUP;
     const f = {};
@@ -110,7 +119,14 @@ const TodoForm = (() => {
     const make = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
     const md = ymd => { const d = D.parse(ymd); return `${d.getMonth() + 1}/${d.getDate()}(${DOW[d.getDay()]})`; };
 
-    SD.SUBJECTS.forEach(s => f.subject.add(new Option(s, s)));
+    const subjects = Views.subjectPicker(f.subject, { onChange: () => updateHint() });
+    [['once', '할 일'], ['daily', '매일 할 일']].forEach(([v, label]) => {
+      const input = make('input', 'btn-check');
+      Object.assign(input, { type: 'radio', name: `${uid}-mode`, id: `${uid}-mode-${v}`, value: v, autocomplete: 'off' });
+      f.modeGroup.append(input, Object.assign(make('label', 'btn btn-outline-secondary btn-sm sd-size-btn', label), { htmlFor: input.id }));
+    });
+    f.modeGroup.setAttribute('aria-label', '할 일 종류');
+    if (plannerOnly) f.modeGroup.classList.add('d-none');
     SD.TYPES.forEach(t => f.type.add(new Option(SD.TYPE_LABEL[t], t)));
     SD.PRIORITIES.forEach(p => {
       const input = make('input', 'btn-check');
@@ -138,7 +154,9 @@ const TodoForm = (() => {
     const setPriority = p => { form.querySelector(`#${uid}-pri-${p}`).checked = true; };
     const currentSize = () => Number((form.querySelector(`input[name="${uid}-size"]:checked`) || {}).value || 3);
     const setSize = n => { form.querySelector(`#${uid}-size-${n}`).checked = true; updateHint(); };
-    const isPlanned = () => plannerOnly || f.planned.checked;
+    const isDaily = () => !plannerOnly && form.querySelector(`#${uid}-mode-daily`).checked;
+    const setMode = daily => { form.querySelector(`#${uid}-mode-${daily ? 'daily' : 'once'}`).checked = true; };
+    const isPlanned = () => plannerOnly || (!isDaily() && f.planned.checked);
 
     function showTune(open) {
       f.tuneBody.classList.toggle('d-none', !open);
@@ -147,10 +165,13 @@ const TodoForm = (() => {
 
     function showPlanBox() {
       const on = isPlanned();
+      const daily = isDaily();
       f.planBox.classList.toggle('d-none', !on);
+      f.plannedWrap.classList.toggle('d-none', plannerOnly || daily);
+      f.dailyNote.classList.toggle('d-none', !daily);
       const exam = f.type.value === 'exam';
-      f.dateLabel.textContent = on ? (exam ? '시험일' : '마감일') : '날짜';
-      f.title.placeholder = on ? (exam ? '예: 자율주행 중간고사' : '예: 자료구조 과제 제출') : '예: 교재 반납';
+      f.dateLabel.textContent = daily ? '시작일' : on ? (exam ? '시험일' : '마감일') : '날짜';
+      f.title.placeholder = daily ? '예: 영어 단어 30개' : on ? (exam ? '예: 중간고사' : '예: 과제 제출') : '예: 교재 반납';
       updateHint();
     }
 
@@ -178,7 +199,7 @@ const TodoForm = (() => {
       const size = currentSize();
       const exam = f.type.value === 'exam';
       const editing = state.editingId !== null ? tasks.find(t => t.id === state.editingId) : null;
-      const draft = { id: editing ? editing.id : null, type: f.type.value, subject: f.subject.value, size, date: f.date.value,
+      const draft = { id: editing ? editing.id : null, type: f.type.value, subject: subjects.value(), size, date: f.date.value,
         createdAt: editing ? editing.createdAt : D.today(), plan: readOverride(), planned: true };
       const pv = Planner.preview(draft, settings, events, tasks);
       const defaults = Planner.preview({ ...draft, plan: null }, settings, events, tasks).params;
@@ -208,6 +229,7 @@ const TodoForm = (() => {
       f.hint.append(make('span', 'sd-hint-dates', sessions.length ? sessions.join(' · ') : '남은 기간이 짧아 오늘 바로 진행합니다'));
     }
 
+    f.modeGroup.addEventListener('change', showPlanBox);
     f.planned.addEventListener('change', () => {
       if (f.planned.checked && !state.sizeTouched) setSize(SD.TYPE_DEFAULT_SIZE[f.type.value]);
       showPlanBox();
@@ -215,7 +237,6 @@ const TodoForm = (() => {
     f.type.addEventListener('change', () => { if (!state.sizeTouched) setSize(SD.TYPE_DEFAULT_SIZE[f.type.value]); showPlanBox(); });
     f.sizeGroup.addEventListener('change', () => { state.sizeTouched = true; updateHint(); });
     f.date.addEventListener('change', updateHint);
-    f.subject.addEventListener('change', updateHint);
     tuneInputs.forEach(i => i.addEventListener('input', updateHint));
     f.tuneToggle.addEventListener('click', () => showTune(f.tuneBody.classList.contains('d-none')));
     f.tuneReset.addEventListener('click', () => { fillOverride(null); updateHint(); });
@@ -223,18 +244,25 @@ const TodoForm = (() => {
     function lockLinked(locked) {
       [f.title, f.date, f.type].forEach(i => { i.disabled = locked; });
       f.planned.disabled = locked;
+      f.modeGroup.querySelectorAll('input').forEach(i => { i.disabled = locked; });
       f.lockNote.classList.toggle('d-none', !locked);
     }
 
     function setDeleteConfirm(on) {
       state.confirmDelete = on;
-      f.del.textContent = on ? '정말 삭제' : '삭제';
+      f.del.textContent = editOnly ? (on ? '정말 빼기' : '플래너에서 빼기') : (on ? '정말 삭제' : '삭제');
       f.del.classList.toggle('btn-danger', on);
       f.del.classList.toggle('btn-outline-danger', !on);
     }
 
+    function showIdle(idle) {
+      f.idle.classList.toggle('d-none', !idle);
+      form.classList.toggle('d-none', idle);
+    }
+
     function reset(dateYmd) {
       state.editingId = null;
+      showIdle(editOnly);
       state.sizeTouched = false;
       form.reset();
       form.classList.remove('was-validated');
@@ -242,7 +270,8 @@ const TodoForm = (() => {
       f.date.value = dateYmd || (plannerOnly ? D.addDays(D.today(), 7) : D.today());
       f.type.value = 'assignment';
       f.planned.checked = plannerOnly;               // off by default on Calendar · Todo
-      f.subject.value = plannerOnly ? SD.SUBJECTS[0] : '기타';
+      setMode(false);
+      subjects.fill('');
       setPriority('mid');
       fillOverride(null);
       showTune(false);
@@ -260,11 +289,12 @@ const TodoForm = (() => {
       const t = findTask(id);
       if (!t) return false;
       reset();
+      showIdle(false);
       state.editingId = id;
       state.sizeTouched = true;
       f.title.value = t.title;
-      if (![...f.subject.options].some(o => o.value === t.subject)) f.subject.add(new Option(t.subject, t.subject));
-      f.subject.value = t.subject;
+      subjects.fill(t.subject);
+      setMode(t.repeat === 'daily');
       f.date.value = t.date;
       f.type.value = t.type;
       f.planned.checked = plannerOnly || t.planned;
@@ -273,11 +303,11 @@ const TodoForm = (() => {
       showTune(!!t.plan);
       setSize(t.size);
       lockLinked(t.sourceEventId !== null);
-      f.heading.textContent = '할 일 수정';
+      f.heading.textContent = editOnly ? '계획 수정' : t.repeat === 'daily' ? '매일 할 일 수정' : '할 일 수정';
       f.submit.textContent = '수정 저장';
       f.badge.classList.remove('d-none');
       f.cancel.classList.remove('d-none');
-      f.del.classList.remove('d-none');
+      f.del.classList.toggle('d-none', editOnly && t.sourceEventId !== null);   // deadlines stay planned
       showPlanBox();
       root.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       (t.sourceEventId !== null ? form.querySelector(`#${uid}-size-${t.size}`) : f.title).focus({ preventScroll: true });
@@ -289,19 +319,20 @@ const TodoForm = (() => {
       f.title.value = f.title.value.trim();
       if (!form.checkValidity()) { form.classList.add('was-validated'); return; }
       const planned = isPlanned();
-      const data = { subject: f.subject.value, priority: priority(), planned, size: currentSize(), plan: planned ? readOverride() : null };
+      const repeat = isDaily() ? 'daily' : null;
+      const data = { subject: subjects.value(), priority: priority(), planned, repeat, size: currentSize(), plan: planned ? readOverride() : null };
       if (!f.title.disabled) Object.assign(data, { title: f.title.value, date: f.date.value, type: planned ? f.type.value : 'general' });
 
       const tasks = SD.getTasks();
       let msg;
       if (state.editingId !== null) {
         const t = tasks.find(x => x.id === state.editingId);
-        if (t) Object.assign(t, data);
+        if (t) { Object.assign(t, data); if (!repeat) t.doneDates = []; }
         msg = planned ? '수정했어요. 계획을 다시 계산했어요.' : '수정했어요.';
       } else {
-        tasks.push({ id: SD.newId(), ...data, completed: false, createdAt: D.today(), sessions: [],
+        tasks.push({ id: SD.newId(), ...data, doneDates: [], completed: false, createdAt: D.today(), sessions: [],
           sourceEventId: null, sourceRev: null, archived: false, orphaned: false });
-        msg = planned ? '추가했어요. 플래너에 반영했어요.' : '할 일을 추가했어요.';
+        msg = planned ? '추가했어요. 플래너에 반영했어요.' : repeat ? '매일 할 일을 추가했어요.' : '할 일을 추가했어요.';
       }
       if (!SD.saveTasks(tasks)) { onSaved('저장하지 못했어요. 브라우저의 사이트 데이터 설정을 확인하세요.'); return; }
       const keepDate = f.date.value;
@@ -314,6 +345,14 @@ const TodoForm = (() => {
       if (!state.confirmDelete) { setDeleteConfirm(true); return; }
       let tasks = SD.getTasks();
       const t = tasks.find(x => x.id === state.editingId);
+      if (editOnly) {
+        // Planner can't delete: the task goes back to Calendar · Todo as a plain to-do
+        if (t) { t.planned = false; t.plan = null; }
+        SD.saveTasks(tasks);
+        reset();
+        onSaved('플래너에서 뺐어요. Calendar · Todo에는 그대로 있어요.');
+        return;
+      }
       // linked to a Calendar deadline → hide instead of delete, or the next sync recreates it
       if (t && t.sourceEventId !== null) t.archived = true;
       else tasks = tasks.filter(x => x.id !== state.editingId);

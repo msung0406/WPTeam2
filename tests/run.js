@@ -370,6 +370,38 @@ test('newTodo: plain, today as createdAt; deadlines sync as planned', () => {
   SD.syncDeadlines();
   assert.strictEqual(SD.getTasks()[0].planned, true);
 });
+/* ---------------- v6: your own classes · daily to-dos ---------------- */
+test('classes start empty; add trims, dedupes, caps at 30; old 기타 means no class', () => {
+  const { SD } = boot({ tasks: JSON.stringify([{ id: 1, title: 'a', date: '2026-11-16', subject: '기타' }]) });
+  assert.strictEqual(JSON.stringify(SD.getSubjects()), '[]');
+  assert.strictEqual(SD.addSubject('  자료구조 '), '자료구조');
+  SD.addSubject('자료구조'); SD.addSubject(''); SD.addSubject('기타');
+  assert.deepStrictEqual(JSON.stringify(SD.getSubjects()), JSON.stringify(['자료구조']));
+  for (let i = 0; i < 40; i++) SD.addSubject('c' + i);
+  assert.strictEqual(SD.getSubjects().length, 30);
+  SD.removeSubject('자료구조');
+  assert.ok(!SD.getSubjects().includes('자료구조'));
+  assert.strictEqual(SD.getTasks()[0].subject, '');
+});
+test('daily to-do: never planned, shows from its start date, ticked per day', () => {
+  const { SD, P } = boot();
+  const d = SD.newTodo({ title: '단어', due: '2026-11-10', repeat: 'daily' });
+  d.planned = true;                                                  // even if something sets it, normalize wins
+  SD.saveTasks([d]);
+  const t = SD.getTasks()[0];
+  assert.strictEqual(t.planned, false);
+  assert.strictEqual(SD.isDailyOn(t, '2026-11-09'), false);
+  assert.strictEqual(SD.isDailyOn(t, '2026-11-20'), true);
+  SD.toggleDaily(t.id, '2026-11-11', true); SD.toggleDaily(t.id, '2026-11-11', true); SD.toggleDaily(t.id, '2026-11-12', true);
+  SD.toggleDaily(t.id, '2026-11-12', false);
+  assert.strictEqual(JSON.stringify(SD.getTasks()[0].doneDates), JSON.stringify(['2026-11-11']));
+  assert.deepStrictEqual(Object.keys(P.plan({ tasks: SD.getTasks(), settings: S, today: MON }).days).filter(k => P.plan({ tasks: SD.getTasks(), settings: S, today: MON }).days[k].length), []);
+});
+test('export / import carries classes', () => {
+  const a = boot(); a.SD.addSubject('네트워크');
+  const b = boot(); assert.ok(b.SD.importAll(JSON.parse(JSON.stringify(a.SD.exportAll()))).ok);
+  assert.strictEqual(JSON.stringify(b.SD.getSubjects()), JSON.stringify(['네트워크']));
+});
 test('ids unique', () => {
   const { SD } = boot(); const s = new Set(); for (let i = 0; i < 1000; i++) s.add(SD.newId()); assert.strictEqual(s.size, 1000);
 });

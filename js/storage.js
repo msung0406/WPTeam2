@@ -4,6 +4,7 @@
    v4 = size-based planning with session hours. Tasks have a size (1–5), no time estimate;
         the planner (js/planner.js) turns size + due date + your week into sessions of N hours.
    v5 = task.planned: plain to-dos (false) live on the Calendar day only; planned tasks (true) get sessions.
+   v6 = classes are yours (key "subjects", starts empty, '' = no class) · task.repeat 'daily' + doneDates.
    Rules: date "YYYY-MM-DD" · time "HH:MM" · id = SD.newId()
    Maintainer: 김주환
    ========================================================= */
@@ -11,10 +12,11 @@ const SD = (() => {
   'use strict';
 
   /* ---------- constants ---------- */
-  const KEYS = { tasks: 'tasks', events: 'events', ddays: 'ddays', studyLogs: 'studyLogs', settings: 'settings' };
+  const KEYS = { tasks: 'tasks', events: 'events', ddays: 'ddays', studyLogs: 'studyLogs', settings: 'settings', subjects: 'subjects' };
 
-  // Fixed list so per-subject stats never split on typos
-  const SUBJECTS = ['Web Programming', 'Algorithms', 'Networking', 'Autonomous Driving', 'Cloud', '기타'];
+  // Classes: the user's own list (starts empty). '' = no class. Old v5 data used '기타' for that.
+  const MAX_SUBJECTS = 30;
+  const subj = v => { const t = str(v, 30).trim(); return t === '기타' ? '' : t; };
 
   const PRIORITIES = ['high', 'mid', 'low'];
   const PRIORITY_LABEL = { high: '높음', mid: '보통', low: '낮음' };
@@ -88,13 +90,15 @@ const SD = (() => {
     return {
       id: t.id,
       title: str(t.title),
-      subject: str(t.subject) || '기타',
+      subject: subj(t.subject),
       date: t.date,                                              // due date
       priority: oneOf(t.priority, PRIORITIES, 'mid'),
       type,
       size: toSize(t.size, TYPE_DEFAULT_SIZE[type]),             // 1–5
       completed: t.completed === true,
-      planned: t.planned !== false,                              // true = the planner schedules study sessions for it; false = plain to-do (data before v5 → true)
+      repeat: t.repeat === 'daily' ? 'daily' : null,             // 'daily' = shows every day from `date` on, ticked per day
+      doneDates: t.repeat === 'daily' && Array.isArray(t.doneDates) ? [...new Set(t.doneDates.filter(isYMD))].sort() : [],
+      planned: t.repeat !== 'daily' && t.planned !== false,      // true = the planner schedules study sessions for it; false = plain to-do (data before v5 → true)
       createdAt: isYMD(t.createdAt) ? t.createdAt : (t.date < date.today() ? t.date : date.today()),
       sessions: normalizeSessions(t),                            // [{ date, hours }] one entry per finished session
       plan: normalizePlanOverride(t.plan),                       // per-task override of the size pattern, or null
@@ -130,7 +134,7 @@ const SD = (() => {
       const type = oneOf(e.type, TYPES, 'assignment');
       return {
         ...base, kind: 'deadline', type,
-        subject: str(e.subject) || '기타',
+        subject: subj(e.subject),
         size: toSize(e.size, TYPE_DEFAULT_SIZE[type]),
         priority: oneOf(e.priority, PRIORITIES, 'high'),
         showDday: e.showDday === true
@@ -148,7 +152,7 @@ const SD = (() => {
   function normalizeLog(l) {
     if (!l || !isId(l.id) || !isYMD(l.date)) return null;
     return {
-      id: l.id, subject: str(l.subject) || '기타', date: l.date,
+      id: l.id, subject: subj(l.subject), date: l.date,
       minutes: Math.max(0, parseInt(l.minutes, 10) || 0),
       mode: str(l.mode, 20) || 'focus', taskId: isId(l.taskId) ? l.taskId : null
     };
@@ -202,13 +206,36 @@ const SD = (() => {
   const totalHours = task => task.sessions.reduce((s, x) => s + x.hours, 0);
 
   // a plain to-do (no planner) — Calendar · Todo and Main use this
-  const newTodo = ({ title, due, subject = '기타', priority = 'mid' }) => normalizeTask({
+  const newTodo = ({ title, due, subject = '', priority = 'mid', repeat = null }) => normalizeTask({
     id: newId(), title, date: due, subject, priority, type: 'general', size: 1, completed: false, planned: false,
-    createdAt: date.today(), sessions: [], plan: null
+    repeat, doneDates: [], createdAt: date.today(), sessions: [], plan: null
   });
+
+  // daily to-do: tick / untick one day
+  const toggleDaily = (taskId, ymd, done) => updateTask(taskId, t => {
+    t.doneDates = t.doneDates.filter(d => d !== ymd);
+    if (done) t.doneDates.push(ymd);
+    t.doneDates.sort();
+  });
+  const isDailyOn = (t, ymd) => t.repeat === 'daily' && t.date <= ymd;   // shows on that day
 
   // Finish (or reopen) a whole task. Remaining planned sessions disappear.
   const setCompleted = (taskId, completed) => updateTask(taskId, t => { t.completed = !!completed; });
+
+  /* =========================================================
+     subjects (classes) — added from any subject picker, removed on Dashboard
+     ========================================================= */
+  const normalizeSubjects = v => (Array.isArray(v) ? [...new Set(v.map(subj).filter(Boolean))].slice(0, MAX_SUBJECTS) : []);
+  const getSubjects = () => normalizeSubjects(readRaw(KEYS.subjects, []));
+  const saveSubjects = list => writeRaw(KEYS.subjects, normalizeSubjects(list));
+  function addSubject(name) {
+    const n = subj(name);
+    if (!n) return null;
+    const list = getSubjects();
+    if (!list.includes(n)) { if (list.length >= MAX_SUBJECTS) return null; list.push(n); saveSubjects(list); }
+    return n;
+  }
+  const removeSubject = name => saveSubjects(getSubjects().filter(s => s !== name));   // tasks/logs keep their text
 
   /* =========================================================
      events — owner: Calendar
@@ -301,8 +328,8 @@ const SD = (() => {
      ========================================================= */
   function exportAll() {
     return {
-      app: 'study-dashboard', version: 5, exportedAt: new Date().toISOString(),
-      data: { tasks: getTasks(), events: getEvents(), ddays: getDdays(), studyLogs: getStudyLogs(), settings: getSettings() }
+      app: 'study-dashboard', version: 6, exportedAt: new Date().toISOString(),
+      data: { tasks: getTasks(), events: getEvents(), ddays: getDdays(), studyLogs: getStudyLogs(), settings: getSettings(), subjects: getSubjects() }
     };
   }
   function importAll(obj) {
@@ -314,7 +341,7 @@ const SD = (() => {
     const next = {
       tasks: list(d.tasks, normalizeTask), events: list(d.events, normalizeEvent),
       ddays: list(d.ddays, normalizeDday), studyLogs: list(d.studyLogs, normalizeLog),
-      settings: normalizeSettings(d.settings)
+      settings: normalizeSettings(d.settings), subjects: normalizeSubjects(d.subjects)
     };
     const ok = Object.entries(next).every(([k, v]) => writeRaw(KEYS[k], v));
     if (!ok) return { ok: false, error: '저장 공간에 쓸 수 없습니다.' };
@@ -342,11 +369,13 @@ const SD = (() => {
 
   return {
     // constants
-    KEYS, SUBJECTS, PRIORITIES, PRIORITY_LABEL, TYPES, TYPE_LABEL, TYPE_DEFAULT_SIZE, SIZES, SIZE_LABEL, AVAIL, AVAIL_LABEL, DEFAULT_WEEK,
+    KEYS, PRIORITIES, PRIORITY_LABEL, TYPES, TYPE_LABEL, TYPE_DEFAULT_SIZE, SIZES, SIZE_LABEL, AVAIL, AVAIL_LABEL, DEFAULT_WEEK,
     // utils
     date, newId, onChange,
     // tasks
-    getTasks, saveTasks, activeTasks, newTodo, toggleSession, hoursOn, hoursBefore, totalHours, setCompleted,
+    getTasks, saveTasks, activeTasks, newTodo, toggleDaily, isDailyOn, toggleSession, hoursOn, hoursBefore, totalHours, setCompleted,
+    // classes
+    getSubjects, saveSubjects, addSubject, removeSubject,
     // events / ddays
     getEvents, saveEvents, eventsOn, hasScheduleOn, getDdays, saveDdays, allDdays,
     // study logs

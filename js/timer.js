@@ -56,7 +56,7 @@
   function defaultState() {
     return {
       mode: "stopwatch", // "stopwatch" | "pomodoro"
-      subject: SD.SUBJECTS[0],
+      subject: "",
       taskId: null,
       running: false,
       startedAt: null, // Date.now() when the current run started
@@ -94,7 +94,7 @@
       minutes: { ...base.minutes, ...saved.minutes },
     };
     if (!["stopwatch", "pomodoro"].includes(s.mode)) s.mode = base.mode;
-    if (!SD.SUBJECTS.includes(s.subject)) s.subject = base.subject;
+    if (typeof s.subject !== "string") s.subject = base.subject;
     if (typeof s.taskId !== "number") s.taskId = null;
     if (!(s.phase in PHASES)) s.phase = "focus";
     s.running = s.running === true && Number.isFinite(s.startedAt);
@@ -197,7 +197,7 @@
     clearSession();
     if (minutes >= 1) {
       saveLog(minutes, "stopwatch");
-      setNotice(`${state.subject} ${Stats.formatMinutes(minutes)} 기록했어요.`);
+      setNotice(`${state.subject ? state.subject + " " : ""}${Stats.formatMinutes(minutes)} 기록했어요.`);
     } else {
       setNotice("1분 미만은 기록하지 않아요.");
     }
@@ -293,7 +293,7 @@
     const isBreak = isPomodoro() && state.phase !== "focus";
     const what = isPomodoro() ? PHASES[state.phase].label : "공부";
     if (state.running)
-      return isBreak ? `${what} 중` : `${state.subject} · ${what} 중`;
+      return isBreak || !state.subject ? `${what} 중` : `${state.subject} · ${what} 중`;
     if (state.accumulatedMs > 0) return "일시정지";
     if (isPomodoro())
       return `${what} ${state.minutes[state.phase]}분 · 대기 중`;
@@ -328,7 +328,7 @@
     els.stopBtn.classList.toggle("d-none", pomodoro);
     els.resetBtn.classList.toggle("d-none", !pomodoro);
 
-    els.subject.value = state.subject;
+    if (els.subject.value !== state.subject) subjects.fill(state.subject);
     els.subject.disabled = busy;
     els.task.disabled = busy;
 
@@ -347,14 +347,16 @@
     renderClock();
   }
 
+  // classes are the user's own list (Views.subjectPicker adds "+ 새 과목")
+  const subjects = Views.subjectPicker(els.subject, {
+    onChange: (v) => {
+      state.subject = v;
+      saveState();
+      render();
+    },
+  });
   function renderSubjects() {
-    els.subject.replaceChildren(
-      ...SD.SUBJECTS.map((s) => {
-        const opt = make("option", "", s);
-        opt.value = s;
-        return opt;
-      }),
-    );
+    subjects.fill(state.subject);
   }
 
   function renderTasks() {
@@ -370,7 +372,7 @@
     els.task.replaceChildren(
       none,
       ...tasks.map((t) => {
-        const opt = make("option", "", `${t.title} · ${t.subject}`);
+        const opt = make("option", "", t.subject ? `${t.title} · ${t.subject}` : t.title);
         opt.value = String(t.id);
         return opt;
       }),
@@ -407,7 +409,7 @@
       const body = make("div", "sd-log-body");
       const meta = make("div", "sd-log-meta");
       meta.append(
-        make("span", "badge sd-subj", l.subject),
+        make("span", "badge sd-subj", l.subject || "과목 없음"),
         make("span", "", LOG_MODE_LABEL[l.mode] || "기록"),
       );
       body.append(meta);
@@ -458,18 +460,11 @@
     }),
   );
 
-  els.subject.addEventListener("change", () => {
-    state.subject = els.subject.value;
-    saveState();
-    render();
-  });
-
-  // linking a task also picks its subject when it is one of SD.SUBJECTS
+  // linking a task also picks its subject
   els.task.addEventListener("change", () => {
     state.taskId = els.task.value ? Number(els.task.value) : null;
     const task = openTasks().find((t) => t.id === state.taskId);
-    if (task && SD.SUBJECTS.includes(task.subject))
-      state.subject = task.subject;
+    if (task && task.subject) state.subject = task.subject;
     saveState();
     render();
   });

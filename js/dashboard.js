@@ -37,15 +37,16 @@
     if (localStorage.getItem("dashSource") === "plan") source = "plan";
   } catch (e) {}
 
-  const subjectOf = (s) => (SD.SUBJECTS.includes(s) ? s : "기타");
-
-  // { subject: Map(ymd → minutes) } for the given year
-  function collect(year) {
-    const out = Object.fromEntries(SD.SUBJECTS.map((s) => [s, new Map()]));
+  // { all: Map(ymd → minutes), bySubject: { class: Map } } for the given year.
+  // Classes = your own list (SD.getSubjects); time without a listed class still counts in "all".
+  function collect(year, subjects) {
+    const bySubject = Object.fromEntries(subjects.map((s) => [s, new Map()]));
+    const all = new Map();
     const add = (subject, ymd, min) => {
       if (!ymd.startsWith(`${year}-`) || min <= 0) return;
-      const m = out[subjectOf(subject)];
-      m.set(ymd, (m.get(ymd) || 0) + min);
+      all.set(ymd, (all.get(ymd) || 0) + min);
+      const m = bySubject[subject];
+      if (m) m.set(ymd, (m.get(ymd) || 0) + min);
     };
     if (source === "timer") {
       SD.getStudyLogs().forEach((l) => add(l.subject, l.date, l.minutes));
@@ -54,7 +55,7 @@
         t.sessions.forEach((x) => add(t.subject, x.date, x.hours * 60)),
       );
     }
-    return out;
+    return { all, bySubject };
   }
 
   const level = (min) => {
@@ -127,7 +128,8 @@
   function render() {
     const today = D.today();
     const year = D.parse(today).getFullYear();
-    const data = collect(year);
+    const subjects = SD.getSubjects();
+    const { all: byDay, bySubject: data } = collect(year, subjects);
     const src = SOURCES[source];
 
     $("#yearLabel").textContent = `${year}년 1월 1일부터`;
@@ -135,17 +137,18 @@
     $("#legendScale").textContent = src.scale;
     $(`#${source === "timer" ? "srcTimer" : "srcPlan"}`).checked = true;
 
-    // summary over all classes
-    const byDay = new Map();
-    const totals = SD.SUBJECTS.map((s) => {
+    // summary: all study time, then per class
+    const totals = subjects.map((s) => {
       let sum = 0;
-      data[s].forEach((min, ymd) => {
+      data[s].forEach((min) => {
         sum += min;
-        byDay.set(ymd, (byDay.get(ymd) || 0) + min);
       });
       return { subject: s, minutes: sum, days: data[s].size };
     });
-    const all = totals.reduce((s, t) => s + t.minutes, 0);
+    let all = 0;
+    byDay.forEach((min) => {
+      all += min;
+    });
     const st = streaks([...byDay.keys()].filter((d) => d <= today), today);
     const top = [...totals].sort((a, b) => b.minutes - a.minutes)[0];
     $("#statTotal").textContent = Stats.formatMinutes(all);
@@ -166,8 +169,8 @@
           "div",
           "d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2",
         );
-        head.append(
-          make("h2", "sd-section-title", t.subject),
+        const right = make("div", "d-flex align-items-baseline gap-2");
+        right.append(
           make(
             "span",
             "small text-secondary",
@@ -175,7 +178,9 @@
               ? `${Stats.formatMinutes(t.minutes)} · ${t.days}일`
               : "아직 기록 없음",
           ),
+          removeButton(t.subject),
         );
+        head.append(make("h2", "sd-section-title", t.subject), right);
         const scroll = make("div", "sd-heat-scroll");
         const map = heatmap(year, data[t.subject], today);
         map.setAttribute("role", "img");
@@ -190,6 +195,8 @@
       }),
     );
 
+    $("#heatEmpty").classList.toggle("d-none", subjects.length > 0);
+
     // narrow screens: show the part of the year around today
     root.querySelectorAll(".sd-heat-scroll").forEach((s) => {
       const cell = s.querySelector(".is-today");
@@ -197,6 +204,37 @@
         s.scrollLeft = cell.offsetLeft - s.clientWidth + 40;
     });
   }
+
+  /* ---------- classes: add here (or from any 과목 select), remove per card ---------- */
+  function removeButton(name) {
+    const b = make("button", "btn btn-sm btn-link sd-heat-del", "삭제");
+    b.type = "button";
+    b.setAttribute("aria-label", `${name} 과목 삭제`);
+    b.addEventListener("click", () => {
+      if (b.dataset.confirm !== "1") {
+        b.dataset.confirm = "1";
+        b.textContent = "정말 삭제";
+        b.classList.add("is-confirm");
+        return;
+      }
+      SD.removeSubject(name);
+      render();
+    });
+    return b;
+  }
+  $("#subjectForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#subjectName");
+    const name = SD.addSubject(input.value);
+    $("#subjectStatus").textContent = name
+      ? ""
+      : input.value.trim()
+        ? "추가하지 못했어요 (최대 30개)."
+        : "과목 이름을 입력하세요.";
+    if (name) input.value = "";
+    render();
+    input.focus();
+  });
 
   document.querySelectorAll('input[name="source"]').forEach((r) =>
     r.addEventListener("change", () => {
@@ -208,7 +246,7 @@
     }),
   );
 
-  SD.onChange([SD.KEYS.tasks, SD.KEYS.studyLogs], render);
+  SD.onChange([SD.KEYS.tasks, SD.KEYS.studyLogs, SD.KEYS.subjects], render);
   window.addEventListener("focus", render);
   render();
 })();

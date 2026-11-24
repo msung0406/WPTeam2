@@ -113,7 +113,7 @@
   function chipsFor(ymd, evMap) {
     const items = (evMap.get(ymd) || []).map((i) => ({ ...i }));
     ctx.active
-      .filter((t) => t.sourceEventId === null && t.date === ymd)
+      .filter((t) => t.sourceEventId === null && !t.repeat && t.date === ymd)
       .forEach((t) =>
         items.push({
           kind: t.planned ? "due" : "todo",
@@ -407,7 +407,7 @@
     el.date.value = state.selected;
     $("#kindSchedule").checked = true;
     el.type.value = "assignment";
-    el.subject.value = SD.SUBJECTS[0];
+    eventSubjects.fill('');
     el.priority.value = "high";
     el.showDday.checked = true;
     el.form.querySelectorAll('input[name="kind"]').forEach((r) => {
@@ -438,7 +438,7 @@
       el.end.value = e.end || "";
     } else {
       el.type.value = e.type;
-      el.subject.value = e.subject;
+      eventSubjects.fill(e.subject);
       el.priority.value = e.priority;
       el.showDday.checked = e.showDday;
     }
@@ -475,7 +475,7 @@
         title,
         date,
         type: el.type.value,
-        subject: el.subject.value,
+        subject: eventSubjects.value(),
         size: old && old.type === el.type.value ? old.size : undefined,
         priority: el.priority.value,
         showDday: el.showDday.checked,
@@ -534,7 +534,7 @@
     values.forEach((v) => select.add(new Option(labels ? labels[v] : v, v)));
   }
   fillSelect(el.type, SD.TYPES, SD.TYPE_LABEL);
-  fillSelect(el.subject, SD.SUBJECTS, null);
+  const eventSubjects = Views.subjectPicker(el.subject);
   fillSelect(el.priority, SD.PRIORITIES, SD.PRIORITY_LABEL);
 
   el.form

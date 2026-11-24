@@ -2,7 +2,10 @@
    Planner — planner.html   담당 김주환
    Planned tasks (task.planned) → study sessions over the next 14 days.
    Data: SD (js/storage.js) · Plan: Planner (js/planner.js)
-   Form: TodoForm (plannerOnly) · Today's list: Views (same rows as Main)
+   Form: TodoForm (plannerOnly + editOnly) — the Planner only edits tasks that came from
+         Calendar · Todo ("플래너에 추가" on, or a Calendar deadline). It can't create or delete;
+         "플래너에서 빼기" turns a task back into a plain to-do.
+   Today's list: Views (same rows as Main)
    Writes: tasks (through TodoForm / Views / setCompleted), settings.
    ========================================================= */
 (() => {
@@ -51,8 +54,8 @@
     node.title = `작업량: ${SD.SIZE_LABEL[size]}`;
   }
 
-  /* ---------- form (shared, always planned here) ---------- */
-  const form = TodoForm.create($('#formRoot'), { plannerOnly: true, onSaved: msg => render(msg) });
+  /* ---------- form (shared): edit-only, always planned here ---------- */
+  const form = TodoForm.create($('#formRoot'), { plannerOnly: true, editOnly: true, onSaved: msg => render(msg) });
   const edit = id => form.edit(id);
   Views.bindDayList(el.todayPlan, () => ctx, msg => {
     render(msg);
@@ -344,28 +347,30 @@
     const t0 = D.today();
     const rows = [
       // title, type, subject, due (days from today), size, priority
-      ['팀프로젝트 최종 산출물', 'project', 'Web Programming', 10, 5, 'high'],
-      ['데통네 퀴즈 2', 'exam', 'Networking', 6, 3, 'high'],
-      ['JS DOM · 이벤트 복습', 'general', 'Web Programming', 1, 2, 'mid'],
-      ['알고리즘 연습문제 3장', 'assignment', 'Algorithms', -1, 2, 'low'],
-      ['K-PaaS 실습 보고서', 'assignment', 'Cloud', 9, 3, 'low']
+      ['예시 팀 프로젝트', 'project', '예시 과목 A', 10, 5, 'high'],
+      ['예시 퀴즈 2', 'exam', '예시 과목 B', 6, 3, 'high'],
+      ['예시 복습', 'general', '예시 과목 A', 1, 2, 'mid'],
+      ['예시 연습문제', 'assignment', '예시 과목 C', -1, 2, 'low'],
+      ['예시 실습 보고서', 'assignment', '예시 과목 C', 9, 3, 'low']
     ];
     const base = r => ({ id: SD.newId(), title: r[0], type: r[1], subject: r[2], date: D.addDays(t0, r[3]), size: r[4], priority: r[5],
       completed: false, planned: true, createdAt: r[3] < 0 ? D.addDays(t0, r[3] - 3) : t0, sessions: [], plan: null, sourceEventId: null, sourceRev: null, archived: false, orphaned: false });
     const tasks = SD.getTasks().concat(rows.map(base));
-    // a finished DCN midterm that took longer than planned → the planner scales the DCN quiz (×1.4)
-    const mid = base(['데통네 중간고사', 'exam', 'Networking', -19, 4, 'high']);
+    // a finished midterm that took longer than planned → the planner scales the same class's quiz (×1.4)
+    const mid = base(['예시 중간고사', 'exam', '예시 과목 B', -19, 4, 'high']);
     mid.createdAt = D.addDays(t0, -26);
     mid.completed = true;
     mid.sessions = [-24, -23, -22, -21, -20].map((n, i) => ({ date: D.addDays(t0, n), hours: [5, 5, 6, 6, 6][i] }));
     tasks.push(mid);
     // two plain to-dos (no planner)
-    tasks.push(SD.newTodo({ title: '도서관 책 반납', due: t0 }), SD.newTodo({ title: '팀 회의 자료 출력', due: D.addDays(t0, 2), subject: 'Web Programming' }));
+    tasks.push(SD.newTodo({ title: '도서관 책 반납', due: t0 }), SD.newTodo({ title: '회의 자료 출력', due: D.addDays(t0, 2), subject: '예시 과목 A' }),
+      SD.newTodo({ title: '단어 30개', due: t0, repeat: 'daily' }));
+    ['예시 과목 A', '예시 과목 B', '예시 과목 C', '예시 과목 D'].forEach(SD.addSubject);
     SD.saveTasks(tasks);
     // one Calendar deadline + one schedule, to show the automatic link (only if Calendar has nothing yet)
     if (!SD.getEvents().length) {
       SD.saveEvents([
-        { id: SD.newId(), kind: 'deadline', title: '자율주행 퀴즈 3', date: D.addDays(t0, 7), type: 'exam', subject: 'Autonomous Driving', size: 4, priority: 'high', showDday: true },
+        { id: SD.newId(), kind: 'deadline', title: '예시 퀴즈 3', date: D.addDays(t0, 7), type: 'exam', subject: '예시 과목 D', size: 4, priority: 'high', showDday: true },
         { id: SD.newId(), kind: 'schedule', title: '동아리 MT', date: D.addDays(t0, 4), start: '10:00', end: '18:00' }
       ]);
       SD.syncDeadlines();

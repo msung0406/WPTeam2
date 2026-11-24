@@ -10,6 +10,7 @@
 .sd-kind-deadline { --kind: var(--sd-high); }
 .sd-kind-dday     { --kind: var(--sd-mid); }
 .sd-kind-task, .sd-kind-todo { --kind: var(--sd-low); }
+.sd-kind-daily    { --kind: var(--sd-mid); }
 .sd-kind-due      { --kind: var(--sd-high); }
 .sd-kind-session  { --kind: var(--sd-accent-text); }
 
@@ -36,6 +37,7 @@
   padding: .55rem .7rem; border-radius: 8px; background: var(--sd-bg); border-left: 3px solid var(--kind, var(--sd-line));
 }
 .sd-row-todo { --kind: var(--sd-low); }
+.sd-row-daily { --kind: var(--sd-mid); }
 .sd-row-due { --kind: var(--sd-high); }
 .sd-row-session, .sd-row-studied { --kind: var(--sd-accent-text); }
 .sd-row .form-check-input { width: 1.2rem; height: 1.2rem; margin: .1rem 0 0; cursor: pointer; }
@@ -55,6 +57,9 @@ button.sd-row-title:hover, button.sd-row-title:focus-visible { color: var(--sd-a
 
 .sd-row.has-finish { grid-template-columns: 1.2rem minmax(0, 1fr) auto; }
 .sd-row-finish { font-size: .72rem; padding: .1rem .5rem; align-self: center; }
+
+/* new class inline input (Views.subjectPicker) */
+.sd-newsub { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .3rem; margin-top: .35rem; }
 
 /* quick add (Main, Calendar day) */
 .sd-quick { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem; }
