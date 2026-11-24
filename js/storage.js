@@ -365,7 +365,14 @@ const SD = (() => {
   /* ---------- today's date, top right of every page (<p class="sd-today" id="todayLabel">) ----------
      Filled here so all pages show the same thing; refreshed on focus (catches midnight). */
   if (typeof document !== 'undefined' && document.getElementById) {
-    const showToday = () => { const n = document.getElementById('todayLabel'); if (n) n.textContent = `오늘 · ${date.label(date.today())}`; };
+    const showToday = () => {
+      const n = document.getElementById('todayLabel');
+      if (!n) return;
+      const pre = document.createElement('span'); pre.className = 'sd-today-pre'; pre.textContent = '오늘';
+      const day = document.createElement('span'); day.className = 'sd-today-date'; day.textContent = date.label(date.today());
+      const sep = document.createElement('span'); sep.className = 'sd-today-sep'; sep.textContent = ' · ';
+      n.replaceChildren(pre, sep, day);                                  // "오늘 · 2026년 11월 24일 (화)" (Dashboard shows it big)
+    };
     showToday();
     window.addEventListener('focus', showToday);
   }

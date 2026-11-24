@@ -3,14 +3,19 @@
    ========================================================= */
 #todayList:empty { display: none; }
 
-/* header: text left · date top right (same spot as other pages) · button bottom right; phone: button under the text */
-.sd-dash-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem 1rem; }
-.sd-dash-text { grid-row: 1 / span 2; }
-.sd-dash-header .sd-today { grid-column: 2; grid-row: 1; justify-self: end; }
-.sd-dash-cta { grid-column: 2; grid-row: 2; align-self: end; }
+/* header: text left · big date top right (same spot as other pages) · button under it
+   phone: big date on its own line first, then the text, then the button */
+.sd-dash-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem 1.5rem; align-items: start; }
+.sd-dash-text { grid-column: 1; grid-row: 1 / span 2; align-self: end; }
+.sd-dash-header .sd-today { grid-column: 2; grid-row: 1; justify-self: end; text-align: right; line-height: 1.15; }
+.sd-dash-header .sd-today-pre { display: block; font-size: .8rem; font-weight: 600; letter-spacing: .06em; color: var(--sd-accent-text); }
+.sd-dash-header .sd-today-sep { display: none; }
+.sd-dash-header .sd-today-date { display: block; font-size: clamp(1.5rem, 1rem + 1.6vw, 2.25rem); font-weight: 700; letter-spacing: -.02em; color: var(--sd-ink); }
+.sd-dash-cta { grid-column: 2; grid-row: 2; justify-self: end; align-self: end; }
 @media (max-width: 575.98px) {
-  .sd-dash-text { grid-row: 1; }
-  .sd-dash-cta { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .sd-dash-header .sd-today { grid-column: 1 / -1; grid-row: 1; justify-self: start; text-align: left; white-space: normal; }
+  .sd-dash-text { grid-row: 2; }
+  .sd-dash-cta { grid-column: 1 / -1; grid-row: 3; justify-self: start; }
 }
 
 /* ---------- Timer heatmap (js/heatmap.js) ---------- */
