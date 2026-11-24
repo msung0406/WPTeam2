@@ -1,278 +1,214 @@
 /* =========================================================
-   Dashboard — everything other pages saved, in one place
+   Dashboard — one GitHub-style grid per class, Jan 1 → Dec 31
+   Two sources (toggle), both read-only:
+     timer → Timer logs (studyLogs.minutes)
+     plan  → planner sessions ticked on Main / Planner (task.sessions hours)
    Maintainer: 김지환
    ========================================================= */
 (() => {
   "use strict";
 
   const D = SD.date;
-  const UPCOMING_DAYS = 14;
-  const GOAL_LIMIT = 5;
+  const DOW = ["일", "월", "화", "수", "목", "금", "토"];
   const $ = (sel) => document.querySelector(sel);
+  const make = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
 
-  function make(tag, className, text) {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    if (text !== undefined) el.textContent = text;
-    return el;
-  }
+  // minutes → level 0–4 (upper bounds of levels 1–3; above = 4)
+  const SOURCES = {
+    timer: {
+      steps: [30, 60, 120],
+      scale: "1칸 = 하루 · 30분 · 1시간 · 2시간 기준",
+      note: "Timer로 공부한 시간이에요. 과목은 Timer에서 고른 과목 기준.",
+    },
+    plan: {
+      steps: [60, 120, 240],
+      scale: "1칸 = 하루 · 1시간 · 2시간 · 4시간 기준",
+      note: "오늘의 계획에서 체크한 공부 시간이에요 (Main · Planner). 과목은 할 일의 과목 기준.",
+    },
+  };
 
-  function setBar(id, pct) {
-    $(`#${id}Bar`).style.width = `${pct}%`;
-    $(`#${id}BarWrap`).setAttribute("aria-valuenow", pct);
-  }
+  let source = "timer";
+  try {
+    if (localStorage.getItem("dashSource") === "plan") source = "plan";
+  } catch (e) {}
 
-  function renderStats(today, week, tasks) {
-    const weekTotal = week.reduce((s, d) => s + d.minutes, 0);
-    const studiedDays = week.filter((d) => d.minutes > 0).length;
-    $("#weekLabel").textContent =
-      `${Stats.formatDate(week[0].date, { month: "long", day: "numeric" })} – ${Stats.formatDate(week[6].date, { month: "long", day: "numeric" })}`;
-    $("#statToday").textContent = Stats.formatMinutes(Stats.minutesOn(today));
-    $("#statWeek").textContent = Stats.formatMinutes(weekTotal);
-    $("#statWeekNote").textContent = studiedDays
-      ? `${studiedDays}일 공부함`
-      : "";
+  const subjectOf = (s) => (SD.SUBJECTS.includes(s) ? s : "기타");
 
-    const rate = Stats.taskCompletion(tasks);
-    $("#statRate").textContent = `${rate.pct}%`;
-    $("#statRateNote").textContent = `${rate.done} / ${rate.total}개 완료`;
-    $("#statLate").textContent = tasks.filter(
-      (t) => !t.completed && t.date < today,
-    ).length;
-  }
-
-  function renderWeekChart(today, week) {
-    const chart = $("#weekChart");
-    const max = Math.max(60, ...week.map((d) => d.minutes));
-    chart.replaceChildren();
-    week.forEach((d) => {
-      const li = make("li", "sd-week-row");
-      li.classList.toggle("is-today", d.date === today);
-      li.classList.toggle("is-future", d.date > today);
-      const label = make("span", "sd-week-day", d.label);
-      const track = make("span", "sd-week-track");
-      const bar = make("span", "sd-week-bar");
-      bar.style.width = `${(d.minutes / max) * 100}%`;
-      track.append(bar);
-      const value = make(
-        "span",
-        "sd-week-value",
-        d.minutes ? Stats.formatMinutes(d.minutes) : "–",
+  // { subject: Map(ymd → minutes) } for the given year
+  function collect(year) {
+    const out = Object.fromEntries(SD.SUBJECTS.map((s) => [s, new Map()]));
+    const add = (subject, ymd, min) => {
+      if (!ymd.startsWith(`${year}-`) || min <= 0) return;
+      const m = out[subjectOf(subject)];
+      m.set(ymd, (m.get(ymd) || 0) + min);
+    };
+    if (source === "timer") {
+      SD.getStudyLogs().forEach((l) => add(l.subject, l.date, l.minutes));
+    } else {
+      SD.getTasks().forEach((t) =>
+        t.sessions.forEach((x) => add(t.subject, x.date, x.hours * 60)),
       );
-      li.setAttribute(
-        "aria-label",
-        `${d.label}요일 ${d.minutes ? Stats.formatMinutes(d.minutes) : "기록 없음"}`,
-      );
-      li.append(label, track, value);
-      chart.append(li);
-    });
-    $("#weekEmpty").classList.toggle(
-      "d-none",
-      week.some((d) => d.minutes > 0),
-    );
-  }
-
-  function renderCompletion(tasks) {
-    const rate = Stats.taskCompletion(tasks);
-    $("#rateLabel").textContent = rate.total
-      ? `${rate.done} / ${rate.total}개 완료`
-      : "등록된 할 일이 없습니다";
-    $("#ratePct").textContent = `${rate.pct}%`;
-    setBar("rate", rate.pct);
-
-    const bySubject = {};
-    tasks.forEach((t) => {
-      const s = (bySubject[t.subject] ||= { done: 0, total: 0 });
-      s.total++;
-      if (t.completed) s.done++;
-    });
-    const list = $("#subjectList");
-    list.replaceChildren();
-    Object.entries(bySubject)
-      .sort((a, b) => b[1].total - a[1].total)
-      .forEach(([subject, s]) => {
-        const li = make("li", "sd-subject-row");
-        li.append(
-          make("span", "text-truncate", subject),
-          make("span", "sd-subject-count", `${s.done}/${s.total}`),
-        );
-        list.append(li);
-      });
-  }
-
-  function renderDdays(today) {
-    const list = $("#ddayList");
-    const ddays = Stats.upcomingDdays(today).slice(0, 5);
-    list.replaceChildren();
-    $("#ddayEmpty").classList.toggle("d-none", ddays.length > 0);
-    ddays.forEach((d) => {
-      const li = make("li", "sd-dday-item");
-      const name = make("div", "sd-dday-name");
-      name.append(
-        make("div", "text-truncate", d.title),
-        make("div", "sd-dday-date", Stats.formatDate(d.targetDate)),
-      );
-      const badge = make(
-        "span",
-        "sd-dday-badge",
-        Stats.ddayText(d.targetDate, today),
-      );
-      badge.classList.toggle("is-today", d.targetDate === today);
-      li.append(name, badge);
-      list.append(li);
-    });
-  }
-
-  // planned total from the planner; null if it can't be computed
-  function plannedHours(task, settings, events, tasks) {
-    try {
-      return Planner.preview(task, settings, events, tasks).totalHours || null;
-    } catch (e) {
-      return null;
     }
+    return out;
   }
 
-  function renderGoals(today, tasks) {
-    const settings = SD.getSettings();
-    const events = SD.getEvents();
-    const open = tasks
-      .filter((t) => !t.completed)
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, GOAL_LIMIT);
-    const list = $("#goalList");
-    list.replaceChildren();
-    $("#goalEmpty").classList.toggle("d-none", open.length > 0);
+  const level = (min) => {
+    if (!min) return 0;
+    const s = SOURCES[source].steps;
+    return min <= s[0] ? 1 : min <= s[1] ? 2 : min <= s[2] ? 3 : 4;
+  };
+  const fmtDay = (ymd) => {
+    const d = D.parse(ymd);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;
+  };
 
-    open.forEach((t) => {
-      const studied = SD.totalHours(t);
-      const planned = plannedHours(t, settings, events, tasks);
-      const pct = planned
-        ? Math.min(100, Math.round((studied / planned) * 100))
-        : 0;
+  /* ---------- one grid: 7 rows (Mon → Sun) × weeks ---------- */
+  function heatmap(year, values, today) {
+    const jan1 = `${year}-01-01`;
+    const dec31 = `${year}-12-31`;
+    const start = D.addDays(jan1, -((D.dow(jan1) + 6) % 7)); // Monday on/before Jan 1
+    const weeks = Math.ceil((D.diff(dec31, start) + 1) / 7);
 
-      const li = make("li", "sd-goal");
-      const head = make("div", "sd-goal-head");
-      const title = make("div", "sd-goal-title");
-      title.append(make("span", "text-truncate", t.title));
-      const meta = make("div", "sd-goal-meta");
-      meta.append(
-        make("span", "badge sd-subj", t.subject),
-        make(
-          "span",
-          `badge sd-pri sd-pri-${t.priority}`,
-          SD.PRIORITY_LABEL[t.priority],
-        ),
-        make("span", "sd-goal-type", SD.TYPE_LABEL[t.type]),
-      );
-      title.append(meta);
-      const due = make("span", "sd-goal-due", Stats.ddayText(t.date, today));
-      due.classList.toggle("is-late", t.date < today);
-      head.append(title, due);
-
-      const progress = make("div", "progress");
-      progress.setAttribute("role", "progressbar");
-      progress.setAttribute("aria-label", `${t.title} 진행률`);
-      progress.setAttribute("aria-valuemin", "0");
-      progress.setAttribute("aria-valuemax", "100");
-      progress.setAttribute("aria-valuenow", pct);
-      const bar = make("div", "progress-bar");
-      bar.style.width = `${pct}%`;
-      progress.append(bar);
-
-      const foot = make(
-        "div",
-        "sd-goal-foot",
-        planned
-          ? `${Stats.formatHours(studied)} / 계획 ${Stats.formatHours(planned)}`
-          : `${Stats.formatHours(studied)} 공부함`,
-      );
-      li.append(head, progress, foot);
-      list.append(li);
-    });
-  }
-
-  function renderUpcoming(today, tasks) {
-    const end = D.addDays(today, UPCOMING_DAYS - 1);
-    const inRange = (ymd) => ymd >= today && ymd <= end;
-    const items = [
-      ...SD.getEvents()
-        .filter((e) => inRange(e.date))
-        .map((e) => ({
-          date: e.date,
-          title: e.title,
-          kind: e.kind === "deadline" ? SD.TYPE_LABEL[e.type] : "일정",
-          time: e.kind === "schedule" && e.start ? e.start : "",
-        })),
-      // deadlines from Calendar are already listed as events
-      ...tasks
-        .filter(
-          (t) => !t.completed && t.sourceEventId === null && inRange(t.date),
-        )
-        .map((t) => ({
-          date: t.date,
-          title: t.title,
-          kind: "마감",
-          time: "",
-        })),
-    ].sort(
-      (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time),
+    // one grid: column 1 = weekday labels, row 1 = month labels, cells placed by week × weekday
+    const wrap = make("div", "sd-heat");
+    wrap.style.setProperty("--weeks", weeks);
+    const at = (node, col, row, span = 1) => {
+      node.style.gridColumn = `${col} / span ${span}`;
+      node.style.gridRow = String(row);
+      wrap.append(node);
+    };
+    for (let m = 0; m < 12; m++) {
+      const first = D.toYMD(new Date(year, m, 1));
+      at(make("span", "sd-heat-month", `${m + 1}월`), Math.floor(D.diff(first, start) / 7) + 2, 1, 3);
+    }
+    ["월", "", "수", "", "금", "", ""].forEach((t, r) =>
+      at(make("span", "sd-heat-dow", t), 1, r + 2),
     );
+    for (let i = 0; i < weeks * 7; i++) {
+      const ymd = D.addDays(start, i);
+      const cell = make("i", "sd-heat-cell");
+      if (ymd < jan1 || ymd > dec31) cell.classList.add("is-out");
+      else {
+        const min = values.get(ymd) || 0;
+        cell.classList.add(`lv${level(min)}`);
+        if (ymd > today) cell.classList.add("is-future");
+        if (ymd === today) cell.classList.add("is-today");
+        cell.title = `${fmtDay(ymd)} · ${min ? Stats.formatMinutes(min) : "기록 없음"}`;
+      }
+      at(cell, Math.floor(i / 7) + 2, (i % 7) + 2);
+    }
+    return wrap;
+  }
 
-    const list = $("#upcomingList");
-    list.replaceChildren();
-    $("#upcomingEmpty").classList.toggle("d-none", items.length > 0);
-    items.forEach((it) => {
-      const li = make("li", "sd-upcoming-item");
-      const when = make("div", "sd-upcoming-date");
-      when.append(
-        make(
-          "span",
-          "sd-upcoming-day",
-          it.date.slice(5).split("-").map(Number).join("/"),
-        ),
-        make(
-          "span",
-          "sd-upcoming-dow",
-          Stats.formatDate(it.date, { weekday: "short" }),
-        ),
-      );
-      const body = make("div", "sd-upcoming-body");
-      body.append(
-        make("div", "text-truncate", it.title),
-        make(
-          "div",
-          "sd-upcoming-meta",
-          [it.kind, it.time, Stats.ddayText(it.date, today)]
-            .filter(Boolean)
-            .join(" · "),
-        ),
-      );
-      li.append(when, body);
-      list.append(li);
+  function streaks(dates, today) {
+    const has = new Set(dates);
+    let current = 0;
+    let d = has.has(today) ? today : D.addDays(today, -1); // today not studied yet → count up to yesterday
+    while (has.has(d)) {
+      current++;
+      d = D.addDays(d, -1);
+    }
+    let best = 0;
+    let run = 0;
+    let prev = null;
+    [...has].sort().forEach((x) => {
+      run = prev && D.diff(x, prev) === 1 ? run + 1 : 1;
+      best = Math.max(best, run);
+      prev = x;
     });
+    return { current, best };
   }
 
   function render() {
     const today = D.today();
-    const tasks = SD.activeTasks();
-    const week = Stats.weekMinutes(today);
-    renderStats(today, week, tasks);
-    renderWeekChart(today, week);
-    renderCompletion(tasks);
-    renderDdays(today);
-    renderGoals(today, tasks);
-    renderUpcoming(today, tasks);
+    const year = D.parse(today).getFullYear();
+    const data = collect(year);
+    const src = SOURCES[source];
+
+    $("#yearLabel").textContent = `${year}년 1월 1일부터`;
+    $("#sourceNote").textContent = src.note;
+    $("#legendScale").textContent = src.scale;
+    $(`#${source === "timer" ? "srcTimer" : "srcPlan"}`).checked = true;
+
+    // summary over all classes
+    const byDay = new Map();
+    const totals = SD.SUBJECTS.map((s) => {
+      let sum = 0;
+      data[s].forEach((min, ymd) => {
+        sum += min;
+        byDay.set(ymd, (byDay.get(ymd) || 0) + min);
+      });
+      return { subject: s, minutes: sum, days: data[s].size };
+    });
+    const all = totals.reduce((s, t) => s + t.minutes, 0);
+    const st = streaks([...byDay.keys()].filter((d) => d <= today), today);
+    const top = [...totals].sort((a, b) => b.minutes - a.minutes)[0];
+    $("#statTotal").textContent = Stats.formatMinutes(all);
+    $("#statDays").textContent = `${byDay.size}일`;
+    $("#statStreak").textContent = `${st.current}일`;
+    $("#statBest").textContent = st.best ? `최고 ${st.best}일` : "";
+    $("#statTop").textContent = top && top.minutes ? top.subject : "–";
+    $("#statTopNote").textContent =
+      top && top.minutes ? Stats.formatMinutes(top.minutes) : "";
+
+    // one card per class
+    const root = $("#heatmaps");
+    root.replaceChildren(
+      ...totals.map((t) => {
+        const card = make("section", "card sd-heat-card");
+        const body = make("div", "card-body");
+        const head = make(
+          "div",
+          "d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2",
+        );
+        head.append(
+          make("h2", "sd-section-title", t.subject),
+          make(
+            "span",
+            "small text-secondary",
+            t.minutes
+              ? `${Stats.formatMinutes(t.minutes)} · ${t.days}일`
+              : "아직 기록 없음",
+          ),
+        );
+        const scroll = make("div", "sd-heat-scroll");
+        const map = heatmap(year, data[t.subject], today);
+        map.setAttribute("role", "img");
+        map.setAttribute(
+          "aria-label",
+          `${t.subject} ${year}년 공부 기록: ${t.days}일, 총 ${Stats.formatMinutes(t.minutes)}`,
+        );
+        scroll.append(map);
+        body.append(head, scroll);
+        card.append(body);
+        return card;
+      }),
+    );
+
+    // narrow screens: show the part of the year around today
+    root.querySelectorAll(".sd-heat-scroll").forEach((s) => {
+      const cell = s.querySelector(".is-today");
+      if (cell && s.scrollWidth > s.clientWidth)
+        s.scrollLeft = cell.offsetLeft - s.clientWidth + 40;
+    });
   }
 
-  SD.onChange(
-    [
-      SD.KEYS.tasks,
-      SD.KEYS.events,
-      SD.KEYS.ddays,
-      SD.KEYS.studyLogs,
-      SD.KEYS.settings,
-    ],
-    render,
+  document.querySelectorAll('input[name="source"]').forEach((r) =>
+    r.addEventListener("change", () => {
+      source = r.value;
+      try {
+        localStorage.setItem("dashSource", source);
+      } catch (e) {}
+      render();
+    }),
   );
+
+  SD.onChange([SD.KEYS.tasks, SD.KEYS.studyLogs], render);
+  window.addEventListener("focus", render);
   render();
 })();

@@ -1,32 +1,11 @@
 /* =========================================================
-   Todo · Planner — page styles (todo.html only)   담당 김주환
-   Colors come from css/style.css tokens only.
+   Planner — page styles (planner.html only)   담당 김주환
+   Colors come from css/style.css tokens only. Form / day list / badges: components.css.
    ========================================================= */
 
-.sd-stat-late .sd-stat-value { color: var(--sd-high); }
-
-/* ---------- form ---------- */
+/* ---------- form column ---------- */
 .sd-form-card { position: sticky; top: 1rem; }
-.sd-editing-badge { font-size: .7rem; color: var(--sd-accent-text); background: var(--sd-accent-soft); }
-.sd-hint { color: var(--sd-muted); font-weight: 400; }
-.sd-pri-btn, .sd-size-btn { font-size: .82rem; padding-inline: .25rem; }
-.btn-check:checked + .sd-pri-btn.sd-pri-high { color: var(--sd-high); border-color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
-.btn-check:checked + .sd-pri-btn.sd-pri-mid  { color: var(--sd-mid);  border-color: var(--sd-mid);  background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
-.btn-check:checked + .sd-pri-btn.sd-pri-low  { color: var(--sd-low);  border-color: var(--sd-low);  background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
-.btn-check:checked + .sd-size-btn { background: var(--sd-accent); border-color: var(--sd-accent-text); color: var(--sd-accent-ink); font-weight: 600; }
-.btn-check:not(:checked) + .sd-pri-btn, .btn-check:not(:checked) + .sd-size-btn { background: var(--sd-surface); }
-.sd-size-hint { font-size: .8rem; color: var(--sd-muted); display: grid; gap: .15rem; }
-.sd-hint-rule { color: var(--sd-ink); font-weight: 500; }
-.sd-hint-dates { font-variant-numeric: tabular-nums; }
-.sd-hint-factor, .sd-hint-after { color: var(--sd-accent-text); font-weight: 500; }
-.sd-hint-early { color: var(--sd-muted); }
 .sd-collapse-btn { color: var(--sd-ink); text-decoration: none; }
-.sd-chip { background: var(--sd-sunk); color: var(--sd-ink); border: 0; font-size: .78rem; padding: .15rem .55rem; border-radius: 99px; }
-.sd-chip span { color: var(--sd-muted); margin-left: .15rem; }
-
-.sd-tune-toggle { font-size: .8rem; color: var(--sd-accent-text); text-decoration: none; }
-.sd-tune { border-top: 1px dashed var(--sd-line); margin-top: .35rem; }
-.sd-tune .form-control::placeholder { color: var(--sd-muted); opacity: .7; }
 .sd-custom { background: var(--sd-sunk); color: var(--sd-accent-text); }
 
 /* weekly availability picker */
@@ -42,25 +21,6 @@
 
 /* ---------- today's plan ---------- */
 .sd-today-card { border-color: var(--sd-accent-text); box-shadow: inset 0 3px 0 var(--sd-accent); }
-.sd-plan { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
-.sd-plan-item {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; gap: .6rem; align-items: center;
-  padding: .55rem .7rem; border-radius: 8px; background: var(--sd-bg);
-}
-.sd-plan-item .form-check-input { width: 1.2rem; height: 1.2rem; margin: 0; cursor: pointer; }
-.sd-plan-title { font-weight: 500; overflow-wrap: anywhere; cursor: pointer; }
-.sd-plan-item.is-done { opacity: .6; }
-.sd-plan-item.is-done .sd-plan-title { text-decoration: line-through; }
-.sd-plan-empty { color: var(--sd-muted); font-size: .9rem; }
-.sd-done-btn { font-size: .75rem; padding: .1rem .5rem; }
-
-.sd-block { font-size: .72rem; font-weight: 600; background: var(--sd-sunk); color: var(--sd-ink); }
-.sd-block-day { background: var(--sd-accent); color: var(--sd-accent-ink); }
-.sd-reason { font-size: .7rem; font-weight: 600; }
-.sd-reason-overdue { color: var(--sd-high); background: color-mix(in srgb, var(--sd-high) 13%, transparent); }
-.sd-reason-due { color: var(--sd-mid); background: color-mix(in srgb, var(--sd-mid) 16%, transparent); }
-.sd-reason-catchup, .sd-reason-fallback { color: var(--sd-accent-text); background: var(--sd-accent-soft); }
-.sd-reason-early { color: var(--sd-low); background: color-mix(in srgb, var(--sd-low) 13%, transparent); }
 .sd-mini.is-early { opacity: .75; border: 1px dashed var(--sd-line); }
 
 /* ---------- toolbar ---------- */
@@ -91,9 +51,6 @@
 .sd-task.is-done .sd-task-title { text-decoration: line-through; color: var(--sd-muted); }
 .sd-task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .25rem; font-size: .8rem; color: var(--sd-muted); }
 .sd-task-meta .badge { font-size: .72rem; }
-.sd-type { background: var(--sd-sunk); color: var(--sd-ink); }
-.sd-type-exam { background: color-mix(in srgb, var(--sd-high) 13%, transparent); color: var(--sd-high); }
-.sd-type-project { background: var(--sd-accent-soft); color: var(--sd-accent-text); }
 .sd-source { background: var(--sd-accent-soft); color: var(--sd-accent-text); }
 .sd-orphan { background: color-mix(in srgb, var(--sd-mid) 16%, transparent); color: var(--sd-mid); }
 .sd-size { display: inline-flex; gap: 2px; }

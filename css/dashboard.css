@@ -1,47 +1,37 @@
 /* =========================================================
-   Dashboard page only. Colors come from var(--sd-*) tokens in style.css.
+   Dashboard page only — yearly grid per class. Colors = style.css tokens.
    ========================================================= */
 
-.sd-progress-lg { --bs-progress-height: .7rem; }
+.sd-stat-text { font-size: 1.15rem; line-height: 1.9rem; }
+@media (min-width: 768px) { .sd-source-pick { justify-items: end; } }
 
-/* ---------- weekly bar chart ---------- */
-.sd-week-chart { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
-.sd-week-row { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) 5.5rem; gap: .75rem; align-items: center; }
-.sd-week-day { font-weight: 600; color: var(--sd-muted); text-align: center; }
-.sd-week-track { height: 1.1rem; border-radius: 6px; background: var(--sd-sunk); overflow: hidden; }
-.sd-week-bar { display: block; height: 100%; border-radius: 6px; background: var(--sd-accent); transition: width .3s ease; }
-.sd-week-value { font-size: .85rem; font-variant-numeric: tabular-nums; text-align: right; color: var(--sd-ink); }
-.sd-week-row.is-today .sd-week-day { color: var(--sd-accent-text); }
-.sd-week-row.is-today .sd-week-bar { background: var(--sd-accent-text); }
-.sd-week-row.is-future .sd-week-value { color: var(--sd-muted); }
-
-/* ---------- subject completion ---------- */
-.sd-subject-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; font-size: .88rem; }
-.sd-subject-row { display: flex; justify-content: space-between; gap: .75rem; }
-.sd-subject-count { color: var(--sd-muted); font-variant-numeric: tabular-nums; }
-
-/* ---------- goals ---------- */
-.sd-goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
-.sd-goal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; margin-bottom: .45rem; }
-.sd-goal-title { min-width: 0; display: grid; gap: .25rem; font-weight: 500; }
-.sd-goal-meta { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; }
-.sd-goal-type { font-size: .75rem; color: var(--sd-muted); }
-.sd-goal-due { flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sd-accent-text); }
-.sd-goal-due.is-late { color: var(--sd-high); }
-.sd-goal-foot { font-size: .78rem; color: var(--sd-muted); margin-top: .3rem; }
-
-/* ---------- upcoming ---------- */
-.sd-upcoming { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
-.sd-upcoming-item { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: .75rem; align-items: center; }
-.sd-upcoming-date {
-  display: grid; justify-items: center; padding: .3rem 0; border-radius: 8px; background: var(--sd-sunk);
-  line-height: 1.2;
+/* level colors: 0 = empty, 1–4 = more accent */
+.sd-heat, .sd-heat-legend {
+  --lv0: var(--sd-sunk);
+  --lv1: color-mix(in srgb, var(--sd-accent) 30%, var(--sd-sunk));
+  --lv2: color-mix(in srgb, var(--sd-accent) 55%, var(--sd-sunk));
+  --lv3: color-mix(in srgb, var(--sd-accent) 80%, var(--sd-sunk));
+  --lv4: var(--sd-accent-text);
 }
-.sd-upcoming-day { font-weight: 600; font-size: .85rem; font-variant-numeric: tabular-nums; }
-.sd-upcoming-dow { font-size: .7rem; color: var(--sd-muted); }
-.sd-upcoming-body { min-width: 0; font-weight: 500; }
-.sd-upcoming-meta { font-size: .78rem; color: var(--sd-muted); font-weight: 400; }
 
-@media (max-width: 575.98px) {
-  .sd-week-row { grid-template-columns: 1.5rem minmax(0, 1fr) 4.5rem; gap: .5rem; }
+.sd-heat-scroll { overflow-x: auto; padding-bottom: .25rem; }
+/* cells stretch to the card width; below ~700px the grid scrolls sideways inside the card */
+.sd-heat {
+  display: grid; min-width: 44rem;
+  grid-template-columns: 1.4rem repeat(var(--weeks), minmax(0, 1fr));
+  gap: 3px;
 }
+.sd-heat-month { font-size: .68rem; color: var(--sd-muted); white-space: nowrap; line-height: 1.2; padding-bottom: 2px; }
+.sd-heat-dow { font-size: .62rem; color: var(--sd-muted); align-self: center; line-height: 1; }
+.sd-heat-cell { display: block; aspect-ratio: 1; border-radius: 2px; background: var(--lv0); }
+.sd-heat-legend i { display: block; width: 11px; height: 11px; border-radius: 2px; background: var(--lv0); }
+.sd-heat .lv1, .sd-heat-legend .lv1 { background: var(--lv1); }
+.sd-heat .lv2, .sd-heat-legend .lv2 { background: var(--lv2); }
+.sd-heat .lv3, .sd-heat-legend .lv3 { background: var(--lv3); }
+.sd-heat .lv4, .sd-heat-legend .lv4 { background: var(--lv4); }
+.sd-heat .is-out { visibility: hidden; }
+.sd-heat .is-future { opacity: .45; }
+.sd-heat .is-today { outline: 2px solid var(--sd-ink); outline-offset: 0; }
+
+.sd-heat-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: .75rem; color: var(--sd-muted); }
+.sd-heat-legend span { margin: 0 .2rem; }

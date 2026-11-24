@@ -27,120 +27,67 @@
         <ul class="navbar-nav ms-lg-3 gap-lg-1">
           <li class="nav-item"><a class="nav-link" href="index.html">Main</a></li>
           <li class="nav-item"><a class="nav-link active" aria-current="page" href="dashboard.html">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="todo.html">Todo · Planner</a></li>
+          <li class="nav-item"><a class="nav-link" href="calendar.html">Calendar · Todo</a></li>
+          <li class="nav-item"><a class="nav-link" href="planner.html">Planner</a></li>
           <li class="nav-item"><a class="nav-link" href="timer.html">Timer</a></li>
-          <li class="nav-item"><a class="nav-link" href="calendar.html">Calendar</a></li>
-          <li class="nav-item"><a class="nav-link" href="progress.html">Progress</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
   <main class="container-xl py-4">
-    <header class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+    <header class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
       <div>
-        <div class="sd-eyebrow">전체 학습 현황</div>
+        <div class="sd-eyebrow" id="yearLabel">1월 1일부터</div>
         <h1 class="sd-page-title">Dashboard</h1>
+        <p class="text-secondary mb-0 mt-1">과목마다 하루하루 얼마나 공부했는지 — GitHub 잔디처럼.</p>
       </div>
-      <p class="text-secondary small mb-0" id="weekLabel"></p>
+      <div class="d-grid gap-1 sd-source-pick">
+        <span class="small text-secondary" id="sourceLabel">기준</span>
+        <div class="btn-group btn-group-sm" role="group" aria-labelledby="sourceLabel">
+          <input type="radio" class="btn-check" name="source" id="srcTimer" value="timer" checked>
+          <label class="btn btn-outline-secondary" for="srcTimer">Timer 기록</label>
+          <input type="radio" class="btn-check" name="source" id="srcPlan" value="plan">
+          <label class="btn btn-outline-secondary" for="srcPlan">계획 체크</label>
+        </div>
+      </div>
     </header>
 
-    <!-- 요약 -->
-    <section class="row g-3 mb-4" aria-label="요약">
-      <div class="col-6 col-lg-3">
-        <div class="card h-100"><div class="card-body">
-          <div class="sd-stat-label">오늘 공부 시간</div>
-          <div class="sd-stat-value" id="statToday">0분</div>
-        </div></div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card h-100"><div class="card-body">
-          <div class="sd-stat-label">이번 주 공부 시간</div>
-          <div class="sd-stat-value" id="statWeek">0분</div>
-          <div class="sd-stat-note" id="statWeekNote"></div>
-        </div></div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card h-100"><div class="card-body">
-          <div class="sd-stat-label">Todo 완료율</div>
-          <div class="sd-stat-value" id="statRate">0%</div>
-          <div class="sd-stat-note" id="statRateNote"></div>
-        </div></div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card h-100"><div class="card-body">
-          <div class="sd-stat-label">기한 지난 할 일</div>
-          <div class="sd-stat-value" id="statLate">0</div>
-          <div class="sd-stat-note">완료하지 않은 것만</div>
-        </div></div>
-      </div>
+    <!-- 올해 전체 -->
+    <section class="row g-3 mb-4" aria-label="올해 요약">
+      <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="sd-stat-label">올해 공부</div>
+        <div class="sd-stat-value" id="statTotal">0</div>
+      </div></div></div>
+      <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="sd-stat-label">공부한 날</div>
+        <div class="sd-stat-value" id="statDays">0</div>
+      </div></div></div>
+      <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="sd-stat-label">연속 공부</div>
+        <div class="sd-stat-value" id="statStreak">0</div>
+        <div class="sd-stat-note" id="statBest"></div>
+      </div></div></div>
+      <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="sd-stat-label">가장 많이 한 과목</div>
+        <div class="sd-stat-value sd-stat-text text-truncate" id="statTop">–</div>
+        <div class="sd-stat-note" id="statTopNote"></div>
+      </div></div></div>
     </section>
 
-    <div class="row g-4">
-      <!-- 이번 주 공부 시간 -->
-      <section class="col-lg-7" aria-labelledby="weekTitle">
-        <div class="card h-100"><div class="card-body">
-          <div class="d-flex justify-content-between align-items-baseline mb-3">
-            <h2 class="sd-section-title" id="weekTitle">이번 주 공부 시간</h2>
-            <a class="sd-more" href="progress.html">Progress →</a>
-          </div>
-          <ol class="sd-week-chart" id="weekChart" aria-label="요일별 공부 시간"></ol>
-          <p class="sd-empty mt-3 mb-0 d-none" id="weekEmpty">이번 주 Timer 기록이 아직 없습니다. <a href="timer.html">Timer로 공부 시작하기</a></p>
-        </div></div>
-      </section>
+    <p class="sd-source-note small text-secondary mb-3" id="sourceNote"></p>
 
-      <!-- Todo 완료율 + D-Day -->
-      <div class="col-lg-5 d-flex flex-column gap-4">
-        <section class="card" aria-labelledby="rateTitle"><div class="card-body">
-          <h2 class="sd-section-title mb-3" id="rateTitle">Todo 완료율</h2>
-          <div class="d-flex justify-content-between small mb-1">
-            <span id="rateLabel"></span><span class="fw-semibold" id="ratePct">0%</span>
-          </div>
-          <div class="progress sd-progress-lg" role="progressbar" aria-label="Todo 완료율" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="rateBarWrap">
-            <div class="progress-bar" id="rateBar" style="width:0%"></div>
-          </div>
-          <ul class="sd-subject-list mt-3" id="subjectList"></ul>
-        </div></section>
+    <!-- 과목별 잔디 -->
+    <div class="d-grid gap-3" id="heatmaps"></div>
 
-        <section class="card" aria-labelledby="ddayTitle"><div class="card-body">
-          <div class="d-flex justify-content-between align-items-baseline mb-3">
-            <h2 class="sd-section-title" id="ddayTitle">D-Day</h2>
-            <a class="sd-more" href="calendar.html">관리</a>
-          </div>
-          <ul class="sd-dday-list" id="ddayList"></ul>
-          <p class="sd-empty mb-0 d-none" id="ddayEmpty">Calendar에서 D-Day를 추가해 보세요.</p>
-        </div></section>
-      </div>
-
-      <!-- 진행 중인 목표 -->
-      <section class="col-lg-7" aria-labelledby="goalTitle">
-        <div class="card h-100"><div class="card-body">
-          <div class="d-flex justify-content-between align-items-baseline mb-3">
-            <h2 class="sd-section-title" id="goalTitle">진행 중인 목표</h2>
-            <a class="sd-more" href="todo.html">Todo · Planner →</a>
-          </div>
-          <ul class="sd-goal-list" id="goalList"></ul>
-          <p class="sd-empty mb-0 d-none" id="goalEmpty">진행 중인 할 일이 없습니다.</p>
-        </div></div>
-      </section>
-
-      <!-- 다가오는 일정 -->
-      <section class="col-lg-5" aria-labelledby="upcomingTitle">
-        <div class="card h-100"><div class="card-body">
-          <div class="d-flex justify-content-between align-items-baseline mb-3">
-            <h2 class="sd-section-title" id="upcomingTitle">다가오는 일정 <span class="small text-secondary fw-normal">14일</span></h2>
-            <a class="sd-more" href="calendar.html">Calendar →</a>
-          </div>
-          <ul class="sd-upcoming" id="upcomingList"></ul>
-          <p class="sd-empty mb-0 d-none" id="upcomingEmpty">앞으로 2주 동안 일정이 없습니다.</p>
-        </div></div>
-      </section>
+    <div class="sd-heat-legend mt-3" aria-hidden="true">
+      <span>적음</span><i class="lv0"></i><i class="lv1"></i><i class="lv2"></i><i class="lv3"></i><i class="lv4"></i><span>많음</span>
+      <span class="ms-3" id="legendScale"></span>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
   <script src="js/storage.js" defer></script>
-  <script src="js/planner.js" defer></script>
   <script src="js/stats.js" defer></script>
   <script src="js/dashboard.js" defer></script>
 </body>

@@ -15,7 +15,5 @@
   .sd-page-title { font-size: 1.45rem; }
   .sd-task { grid-template-columns: auto minmax(0, 1fr); }
   .sd-task-actions { grid-column: 2; }
-  .sd-plan-item { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .sd-plan-item .sd-done-btn { grid-column: 2; justify-self: start; }
   .sd-toolbar .form-select { flex: 1; }
 }

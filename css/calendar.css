@@ -1,19 +1,14 @@
 /* =========================================================
-   Calendar · D-Day — page styles (calendar.html only)   담당 김도형
-   Colors come from css/style.css tokens only.
+   Calendar · Todo — page styles (calendar.html only)   담당 김도형 · 김주환
+   Kind colors, day list and form styles: css/components.css.
    ========================================================= */
 
-/* one color per kind: schedule · deadline · D-Day · Todo task */
-.sd-kind-schedule { --kind: var(--sd-ink); }
-.sd-kind-deadline { --kind: var(--sd-high); }
-.sd-kind-dday     { --kind: var(--sd-mid); }
-.sd-kind-task     { --kind: var(--sd-low); }
-
-.sd-count { background: var(--sd-accent-soft); color: var(--sd-accent-text); font-weight: 600; }
-.sd-hint { color: var(--sd-muted); font-weight: 400; }
 .sd-form-status { color: var(--sd-low); }
 .sd-form-status:empty { display: none; }
 .sd-form-status.is-error { color: var(--sd-high); }
+.sd-sub { font-size: .78rem; font-weight: 600; letter-spacing: .04em; color: var(--sd-muted); margin: 0 0 .5rem; }
+.sd-view-tabs { background: var(--sd-sunk); border-radius: 9px; padding: 3px; }
+.sd-view-tabs .nav-link { padding: .3rem .9rem; font-weight: 500; }
 
 /* ---------- month grid ---------- */
 .sd-cal-summary { font-size: .8rem; color: var(--sd-muted); }
@@ -26,7 +21,7 @@
 .sd-cal-grid { gap: 3px; padding-top: 4px; }
 
 .sd-cal-day {
-  display: flex; flex-direction: column; gap: 4px; min-width: 0; height: 5.6rem;
+  display: flex; flex-direction: column; gap: 4px; min-width: 0; height: 6.4rem;
   padding: .4rem .3rem; text-align: left; overflow: hidden;
   background: var(--sd-surface); color: var(--sd-ink);
   border: 1px solid transparent; border-radius: 8px;
@@ -36,6 +31,7 @@
 .sd-cal-day.is-other { background: var(--sd-bg); }
 .sd-cal-day.is-other .sd-cal-num { color: var(--sd-muted); opacity: .6; }
 .sd-cal-day.is-sun .sd-cal-num { color: var(--sd-high); }
+.sd-cal-day.is-break { background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--sd-sunk) 6px 8px); }
 .sd-cal-day.is-selected { background: var(--sd-accent-soft); border-color: var(--sd-accent-text); }
 
 .sd-cal-num { font-size: .8rem; font-weight: 600; padding-left: .2rem; line-height: 1.5rem; }
@@ -50,7 +46,8 @@
   font-size: .68rem; font-weight: 600; line-height: 1.4; padding: 1px 5px; border-radius: 4px;
   color: var(--kind); background: color-mix(in srgb, var(--kind) 13%, transparent);
 }
-.sd-cal-chip.sd-kind-task { background: transparent; border: 1px dashed color-mix(in srgb, var(--kind) 55%, transparent); }
+.sd-cal-chip.sd-kind-todo, .sd-cal-chip.sd-kind-due { background: transparent; border: 1px dashed color-mix(in srgb, var(--kind) 55%, transparent); }
+.sd-cal-chip.sd-kind-session { font-weight: 500; background: var(--sd-sunk); color: var(--sd-ink); border-left: 2px solid var(--kind); border-radius: 2px 4px 4px 2px; }
 .sd-cal-chip.is-done { text-decoration: line-through; opacity: .6; }
 .sd-cal-more { font-size: .68rem; color: var(--sd-muted); padding-left: 5px; }
 
@@ -62,21 +59,23 @@
 .sd-cal-hint { margin-left: auto; }
 .sd-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--kind); }
 
-/* ---------- selected day ---------- */
-.sd-day-items { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+/* ---------- selected day: events ---------- */
+.sd-day-items { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.sd-day-items:empty { display: none; }
 .sd-day-item {
   display: flex; align-items: center; justify-content: space-between; gap: .5rem;
-  padding: .55rem .4rem .55rem .75rem; border-radius: 8px;
+  padding: .5rem .3rem .5rem .7rem; border-radius: 8px;
   background: var(--sd-bg); border-left: 3px solid var(--kind);
 }
-.sd-day-item.is-done { opacity: .6; }
-.sd-day-item.is-done .sd-day-title { text-decoration: line-through; }
+.sd-day-item.is-editing { outline: 2px solid var(--sd-accent-text); outline-offset: -1px; }
 .sd-day-body { min-width: 0; }
 .sd-day-title { display: block; font-weight: 500; overflow-wrap: anywhere; }
 .sd-day-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-top: .2rem; font-size: .75rem; color: var(--sd-muted); }
 .sd-day-meta .badge { font-size: .68rem; }
-.sd-kind-badge { color: var(--kind); background: color-mix(in srgb, var(--kind) 13%, transparent); }
 .sd-day-dday { font-weight: 700; color: var(--sd-accent-text); font-variant-numeric: tabular-nums; }
+.sd-day-actions { display: flex; flex-shrink: 0; }
+.sd-edit { font-size: .78rem; color: var(--sd-muted); text-decoration: none; padding: .1rem .3rem; }
+.sd-edit:hover, .sd-edit:focus-visible { color: var(--sd-accent-text); }
 .sd-del { color: var(--sd-muted); font-size: 1.1rem; line-height: 1; padding: .1rem .4rem; text-decoration: none; }
 .sd-del:hover, .sd-del:focus-visible { color: var(--sd-high); }
 
@@ -93,7 +92,8 @@
   .sd-cal-day { height: 3.6rem; padding: .3rem .15rem; border-radius: 6px; }
   .sd-cal-chips { flex-direction: row; flex-wrap: wrap; gap: 2px; padding-left: .2rem; }
   .sd-cal-chip { width: .45rem; height: .45rem; padding: 0; font-size: 0; border-radius: 50%; background: var(--kind); }
-  .sd-cal-chip.sd-kind-task { background: transparent; border: 1px solid var(--kind); }
+  .sd-cal-chip.sd-kind-todo, .sd-cal-chip.sd-kind-due { background: transparent; border: 1px solid var(--kind); }
+  .sd-cal-chip.sd-kind-session { background: var(--kind); border: 0; border-radius: 1px; }
   .sd-cal-more { display: none; }
   .sd-cal-hint { display: none; }
   .sd-dday-form { grid-template-columns: minmax(0, 1fr) auto; }

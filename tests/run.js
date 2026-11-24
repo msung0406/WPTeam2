@@ -343,6 +343,33 @@ test('a break day moves that day\'s sessions elsewhere', () => {
   const h = res => Object.values(res.days).flat().filter(i => i.reason !== 'early').reduce((s, i) => s + (i.block === 'day' ? 8 : i.hours), 0);
   assert.strictEqual(h(r), h(normal), 'same total hours, just on other days');
 });
+/* ---------------- v5: plain to-dos vs planned tasks ---------------- */
+test('plain to-do (planned: false) is never scheduled; old data without the flag is planned', () => {
+  const { SD, P } = boot({ tasks: JSON.stringify([
+    { id: 1, title: 'old', date: '2026-11-16', type: 'assignment', size: 4, createdAt: MON },
+    { id: 2, title: 'plain', date: '2026-11-16', type: 'assignment', size: 4, createdAt: MON, planned: false }]) });
+  const tasks = SD.getTasks();
+  assert.strictEqual(tasks[0].planned, true);
+  assert.strictEqual(tasks[1].planned, false);
+  const r = P.plan({ tasks, settings: S, today: MON });
+  assert.deepStrictEqual(Object.keys(view(r, 2)), []);
+  assert.ok(Object.keys(view(r, 1)).length > 0);
+});
+test('a plain exam does not block the next planned exam', () => {
+  const { P } = boot();
+  const quiz = task({ id: 1, type: 'exam', size: 3, date: '2026-11-12', planned: false });
+  const mid = task({ id: 2, type: 'exam', size: 4, date: '2026-11-16' });
+  assert.deepStrictEqual(P.plan({ tasks: [quiz, mid], settings: S, today: MON }).days, P.plan({ tasks: [mid], settings: S, today: MON }).days);
+});
+test('newTodo: plain, today as createdAt; deadlines sync as planned', () => {
+  const { SD } = boot({ events: JSON.stringify([{ id: 5, kind: 'deadline', title: 'd', date: '2026-12-01', type: 'exam' }]) });
+  const t = SD.newTodo({ title: '우유 사기', due: '2026-11-20' });
+  assert.strictEqual(t.planned, false);
+  assert.strictEqual(t.date, '2026-11-20');
+  assert.strictEqual(t.createdAt, SD.date.today());
+  SD.syncDeadlines();
+  assert.strictEqual(SD.getTasks()[0].planned, true);
+});
 test('ids unique', () => {
   const { SD } = boot(); const s = new Set(); for (let i = 0; i < 1000; i++) s.add(SD.newId()); assert.strictEqual(s.size, 1000);
 });

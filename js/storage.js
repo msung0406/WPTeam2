@@ -3,6 +3,7 @@
    Every page reads/writes localStorage ONLY through SD.*
    v4 = size-based planning with session hours. Tasks have a size (1–5), no time estimate;
         the planner (js/planner.js) turns size + due date + your week into sessions of N hours.
+   v5 = task.planned: plain to-dos (false) live on the Calendar day only; planned tasks (true) get sessions.
    Rules: date "YYYY-MM-DD" · time "HH:MM" · id = SD.newId()
    Maintainer: 김주환
    ========================================================= */
@@ -93,6 +94,7 @@ const SD = (() => {
       type,
       size: toSize(t.size, TYPE_DEFAULT_SIZE[type]),             // 1–5
       completed: t.completed === true,
+      planned: t.planned !== false,                              // true = the planner schedules study sessions for it; false = plain to-do (data before v5 → true)
       createdAt: isYMD(t.createdAt) ? t.createdAt : (t.date < date.today() ? t.date : date.today()),
       sessions: normalizeSessions(t),                            // [{ date, hours }] one entry per finished session
       plan: normalizePlanOverride(t.plan),                       // per-task override of the size pattern, or null
@@ -199,6 +201,12 @@ const SD = (() => {
   const hoursBefore = (task, ymd) => task.sessions.filter(x => x.date < ymd).reduce((s, x) => s + x.hours, 0);
   const totalHours = task => task.sessions.reduce((s, x) => s + x.hours, 0);
 
+  // a plain to-do (no planner) — Calendar · Todo and Main use this
+  const newTodo = ({ title, due, subject = '기타', priority = 'mid' }) => normalizeTask({
+    id: newId(), title, date: due, subject, priority, type: 'general', size: 1, completed: false, planned: false,
+    createdAt: date.today(), sessions: [], plan: null
+  });
+
   // Finish (or reopen) a whole task. Remaining planned sessions disappear.
   const setCompleted = (taskId, completed) => updateTask(taskId, t => { t.completed = !!completed; });
 
@@ -262,7 +270,7 @@ const SD = (() => {
       const rev = JSON.stringify(fields);
       const t = tasks.find(x => x.sourceEventId === e.id);
       if (!t) {
-        tasks.push({ id: newId(), ...fields, completed: false, createdAt: date.today(), sessions: [], plan: null,
+        tasks.push({ id: newId(), ...fields, completed: false, planned: true, createdAt: date.today(), sessions: [], plan: null,
           sourceEventId: e.id, sourceRev: rev, archived: false, orphaned: false });
         result.created++;
       } else if (t.sourceRev !== rev) {
@@ -293,7 +301,7 @@ const SD = (() => {
      ========================================================= */
   function exportAll() {
     return {
-      app: 'study-dashboard', version: 4, exportedAt: new Date().toISOString(),
+      app: 'study-dashboard', version: 5, exportedAt: new Date().toISOString(),
       data: { tasks: getTasks(), events: getEvents(), ddays: getDdays(), studyLogs: getStudyLogs(), settings: getSettings() }
     };
   }
@@ -338,7 +346,7 @@ const SD = (() => {
     // utils
     date, newId, onChange,
     // tasks
-    getTasks, saveTasks, activeTasks, toggleSession, hoursOn, hoursBefore, totalHours, setCompleted,
+    getTasks, saveTasks, activeTasks, newTodo, toggleSession, hoursOn, hoursBefore, totalHours, setCompleted,
     // events / ddays
     getEvents, saveEvents, eventsOn, hasScheduleOn, getDdays, saveDdays, allDdays,
     // study logs

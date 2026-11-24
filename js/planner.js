@@ -3,7 +3,8 @@
    Pure functions: no localStorage access, nothing saved.
      Planner.plan({ tasks, events, settings, today }) → { days, overflow }
      Planner.planDay(...) → today's items only
-   Used by Todo (full UI) and Main (today's list).
+   Only tasks with planned !== false are scheduled (plain to-dos are skipped).
+   Used by Planner (full UI), Calendar · Todo and Main (day lists).
    Maintainer: 김주환
    ========================================================= */
 const Planner = (() => {
@@ -169,7 +170,7 @@ const Planner = (() => {
      For finished exams with ticked sessions: actual hours ÷ planned hours. Average, limited to 0.5–2. */
   function subjectFactor(tasks, subject, ctx, excludeId) {
     const ratios = tasks
-      .filter(t => t.type === 'exam' && t.completed && t.subject === subject && t.id !== excludeId && SD.totalHours(t) > 0)
+      .filter(t => t.planned !== false && t.type === 'exam' && t.completed && t.subject === subject && t.id !== excludeId && SD.totalHours(t) > 0)
       .map(t => {
         const planned = desiredSessions(t, ctx, 1).filter(it => it.reason !== 'early').reduce((s, it) => s + itemHours(it, ctx), 0);
         return planned > 0 ? SD.totalHours(t) / planned : null;
@@ -212,7 +213,7 @@ const Planner = (() => {
 
   // latest date of another open exam before this one (that exam is studied for first)
   function examBoundary(tasks, task, today) {
-    const before = tasks.filter(t => t.type === 'exam' && t.id !== task.id && !t.completed && !t.archived && t.date < task.date && t.date >= today);
+    const before = tasks.filter(t => t.planned !== false && t.type === 'exam' && t.id !== task.id && !t.completed && !t.archived && t.date < task.date && t.date >= today);
     return before.length ? before.map(t => t.date).sort().pop() : null;
   }
 
@@ -231,7 +232,7 @@ const Planner = (() => {
     range(today, horizonEnd).forEach(d => { days[d] = { items: [], used: 0, full: false }; });
     const overflow = [];
 
-    const open = tasks.filter(t => !t.archived && !t.completed).sort((a, b) => urgency(b, today) - urgency(a, today));
+    const open = tasks.filter(t => t.planned !== false && !t.archived && !t.completed).sort((a, b) => urgency(b, today) - urgency(a, today));
     const factors = {};
     open.filter(t => t.type === 'exam').forEach(t => {
       if (!(t.subject in factors)) factors[t.subject] = subjectFactor(tasks, t.subject, ctx);
@@ -331,7 +332,7 @@ const Planner = (() => {
     const main = sessions.filter(it => it.reason !== 'early');
     const total = main.reduce((s, it) => s + itemHours(it, ctx), 0);
     const earlyHours = sessions.length - main.length;
-    const after = boundary ? allTasks.find(t => t.type === 'exam' && t.date === boundary && !t.completed && !t.archived) : null;
+    const after = boundary ? allTasks.find(t => t.planned !== false && t.type === 'exam' && t.date === boundary && !t.completed && !t.archived) : null;
     return { params: p, sessions: sessions.map(it => ({ ...it, label: hoursLabel(it) })), totalHours: total, earlyHours, factor, after: after ? after.title : null };
   }
 

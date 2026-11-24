@@ -1,12 +1,26 @@
 /* =========================================================
-   Main — today's study status
+   Main — today: to-do list, study time, this week
+   Today's list = the same list as today on Calendar · Todo (js/views.js).
+   Writes: tasks only through SD.newTodo / Views (setCompleted, toggleSession).
    Maintainer: 김지환
    ========================================================= */
 (() => {
   "use strict";
 
   const D = SD.date;
-  const $ = (sel, root = document) => root.querySelector(sel);
+  const $ = (sel) => document.querySelector(sel);
+  const make = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+  const toast = new bootstrap.Toast("#toast", { delay: 2000 });
+  const notify = (msg) => {
+    if (!msg) return;
+    $("#toastMsg").textContent = msg;
+    toast.show();
+  };
 
   function greeting() {
     const h = new Date().getHours();
@@ -16,144 +30,96 @@
     return "오늘 하루도 수고했어요!";
   }
 
-  function setBar(id, pct) {
-    $(`#${id}Bar`).style.width = `${pct}%`;
-    $(`#${id}BarWrap`).setAttribute("aria-valuenow", pct);
-  }
+  let ctx;
 
-  function renderHeader(plan) {
-    const today = D.today();
-    $("#todayLabel").textContent = Stats.formatDate(today, {
+  function renderHeader(rows) {
+    $("#todayLabel").textContent = Stats.formatDate(ctx.today, {
       year: "numeric",
       month: "long",
       day: "numeric",
       weekday: "long",
     });
     $("#greeting").textContent = greeting();
-    const left = plan.items.filter((i) => !i.checked).length;
+    const p = Views.dayProgress(rows);
+    const left = p.total - p.done;
     $("#greetingSub").textContent =
-      plan.items.length === 0
-        ? "오늘 계획된 할 일이 없습니다."
+      p.total === 0
+        ? "오늘은 계획된 일이 없어요."
         : left === 0
-          ? "오늘 계획을 모두 끝냈어요."
+          ? "오늘 할 일을 모두 끝냈어요."
           : `오늘 남은 할 일이 ${left}개 있어요.`;
+    $("#listCount").textContent = p.total ? `${p.done} / ${p.total} 완료` : "";
   }
 
-  function renderStats(plan) {
-    const checked = plan.items.filter((i) => i.checked).length;
-    const total = plan.items.length;
-    const value = $("#statPlan");
-    value.textContent = `${checked}`;
-    const small = document.createElement("small");
-    small.textContent = `/ ${total}`;
-    value.append(small);
-    setBar("statPlan", plan.pct);
-
-    $("#statStudy").textContent = Stats.formatMinutes(
-      Stats.minutesOn(D.today()),
+  function renderStudy() {
+    const minutes = Stats.minutesOn(ctx.today);
+    $("#studyTotal").textContent = Stats.formatMinutes(minutes);
+    const items = ctx.plan.days[ctx.today] || [];
+    const planned = items.reduce((s, i) => s + Views.plannedHours(i, ctx), 0);
+    const done = items.reduce(
+      (s, i) => s + Math.min(i.done, Views.plannedHours(i, ctx)),
+      0,
     );
-
-    const rate = Stats.taskCompletion();
-    $("#statRate").textContent = `${rate.pct}%`;
-    setBar("statRate", rate.pct);
-
-    const next = Stats.upcomingDdays()[0];
-    $("#statDday").textContent = next ? Stats.ddayText(next.targetDate) : "–";
-    $("#statDdayTitle").textContent = next ? next.title : "등록된 D-Day 없음";
-  }
-
-  function renderToday(plan) {
-    const list = $("#todayPlan");
-    const tpl = $("#tplPlan");
-    const subjectOf = Object.fromEntries(
-      SD.getTasks().map((t) => [t.id, t.subject]),
-    );
-    list.replaceChildren();
-    $("#todayEmpty").classList.toggle("d-none", plan.items.length > 0);
-    $("#todayCount").textContent = plan.items.length
-      ? `${Stats.formatHours(plan.done)} / ${Stats.formatHours(plan.planned)}`
-      : "";
-
-    plan.items.forEach((it, idx) => {
-      const node = tpl.content.firstElementChild.cloneNode(true);
-      node.dataset.id = it.taskId;
-      node.dataset.block = it.block;
-      node.classList.toggle("is-done", it.checked);
-
-      const cb = $(".form-check-input", node);
-      cb.id = `plan-${idx}`;
-      cb.checked = it.checked;
-      const title = $(".sd-plan-title", node);
-      title.htmlFor = cb.id;
-      title.textContent = it.title;
-
-      $(".sd-subj", node).textContent = subjectOf[it.taskId] || "기타";
-      const block = $(".sd-block", node);
-      block.textContent = it.label;
-      block.classList.add(`sd-block-${it.block}`);
-      const reason = Planner.REASON_LABEL[it.reason];
-      if (reason) {
-        const r = $(".sd-reason", node);
-        r.textContent = reason;
-        r.classList.remove("d-none");
-        r.classList.add(`sd-reason-${it.reason}`);
-      }
-      list.append(node);
-    });
+    const pct = planned ? Math.round((done / planned) * 100) : 0;
+    $("#studyNote").textContent = minutes
+      ? "Timer 기록 기준"
+      : "Timer로 공부하면 여기에 쌓여요";
+    $("#planLabel").textContent = planned
+      ? `${Views.fmtH(done)} / ${Views.fmtH(planned)}`
+      : "계획 없음";
+    $("#planBar").style.width = `${pct}%`;
+    $("#planBarWrap").setAttribute("aria-valuenow", pct);
   }
 
   function renderDdays() {
     const list = $("#ddayList");
     const ddays = Stats.upcomingDdays().slice(0, 4);
-    list.replaceChildren();
     $("#ddayEmpty").classList.toggle("d-none", ddays.length > 0);
-    ddays.forEach((d) => {
-      const li = document.createElement("li");
-      li.className = "sd-dday-item";
-      const name = document.createElement("div");
-      name.className = "sd-dday-name";
-      const title = document.createElement("div");
-      title.className = "text-truncate";
-      title.textContent = d.title;
-      const when = document.createElement("div");
-      when.className = "sd-dday-date";
-      when.textContent = Stats.formatDate(d.targetDate);
-      name.append(title, when);
-      const badge = document.createElement("span");
-      badge.className = "sd-dday-badge";
-      badge.classList.toggle("is-today", d.targetDate === D.today());
-      badge.textContent = Stats.ddayText(d.targetDate);
-      li.append(name, badge);
-      list.append(li);
-    });
+    list.replaceChildren(
+      ...ddays.map((d) => {
+        const li = make("li", "sd-dday-item");
+        const name = make("div", "sd-dday-name");
+        name.append(
+          make("div", "text-truncate", d.title),
+          make("div", "sd-dday-date", Stats.formatDate(d.targetDate)),
+        );
+        const badge = make(
+          "span",
+          "sd-dday-badge",
+          Stats.ddayText(d.targetDate),
+        );
+        badge.classList.toggle("is-today", d.targetDate === ctx.today);
+        li.append(name, badge);
+        return li;
+      }),
+    );
   }
 
-  let plan;
-  function render() {
-    plan = Stats.todayPlan();
-    renderHeader(plan);
-    renderStats(plan);
-    renderToday(plan);
+  function render(msg) {
+    notify(msg);
+    ctx = Views.load();
+    const rows = Views.renderDayList($("#todayList"), ctx.today, ctx);
+    $("#todayEmpty").classList.toggle("d-none", rows.length > 0);
+    renderHeader(rows);
+    renderStudy();
     renderDdays();
+    const wk = Views.renderWeekStrip($("#weekStrip"), ctx);
+    $("#weekRange").textContent = `${Views.md(wk.start)} – ${Views.md(wk.end)}`;
   }
 
-  // tick a session: same rule as the Todo page (remaining planned hours are added)
-  $("#todayPlan").addEventListener("change", (e) => {
-    const box = e.target;
-    const host = box.closest("[data-id]");
-    if (!host) return;
-    const id = Number(host.dataset.id);
-    const it = plan.items.find(
-      (i) => i.taskId === id && i.block === host.dataset.block,
-    );
-    const planned = it ? plan.plannedOf(it) : 1;
-    SD.toggleSession(
-      id,
-      D.today(),
-      box.checked,
-      Math.max(0.5, planned - (it ? it.done : 0)),
-    );
-    render();
+  Views.bindDayList($("#todayList"), () => ctx, render);
+
+  // quick add: plain to-do for today (details → Calendar · Todo)
+  $("#quickForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#quickTitle");
+    const title = input.value.trim();
+    if (!title) return input.focus();
+    const tasks = SD.getTasks();
+    tasks.push(SD.newTodo({ title, due: D.today() }));
+    if (!SD.saveTasks(tasks)) return notify("저장하지 못했어요.");
+    input.value = "";
+    render("오늘 할 일에 추가했어요.");
   });
 
   SD.onChange(
@@ -164,7 +130,8 @@
       SD.KEYS.studyLogs,
       SD.KEYS.settings,
     ],
-    render,
+    () => render(),
   );
+  window.addEventListener("focus", () => render());
   render();
 })();
