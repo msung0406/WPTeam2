@@ -5,7 +5,7 @@
 |---|---|---|
 | Dashboard | index.html · js/main.js · js/heatmap.js | 오늘 날짜 · 오늘 할 일 목록 · 오늘 공부 시간 · D-Day · 이번 주 달력 (일정 + 계획된 공부) · 공부 기록 잔디 (Timer, 1월 1일부터, 전체/과목별) · 과목 관리 |
 | Calendar · Todo | calendar.html · js/calendar.js | 월 달력 (일정 · 마감 · 할 일 · 공부) · 날짜 클릭 → 일정/할 일 수정 + 그날 목록 · 할 일 추가 (할 일 / 매일 할 일) |
-| Planner | planner.html · js/planner-page.js | 앞으로 14일 계획 (주간 계획 / 계획된 할 일) · 계획 수정 (Calendar · Todo에서 온 것만) · 플래너 설정 · 쉬는 날 |
+| Planner | planner.html · js/planner-page.js | 마지막 마감까지 계획 (주간 계획 / 계획된 할 일) · 계획 수정 (Calendar · Todo에서 온 것만) · 플래너 설정 · 쉬는 날 |
 | Timer | timer.html · js/timer.js | 스톱워치 · 뽀모도로 → studyLogs |
 
 Progress 페이지와 따로 있던 Dashboard 페이지는 없앰 (Main을 Dashboard로 바꾸고 잔디를 합침). 캘린더 구독(Google 등)은 브라우저만으로는 CORS 때문에 불가 → 향후 기능.
@@ -101,7 +101,7 @@ localStorage는 직접 건드리지 말고 `SD`를 통해서만 접근. 키마�
 const items = Planner.planDay({ tasks: SD.getTasks(), events: SD.getEvents(), settings: SD.getSettings(), today: SD.date.today() });
 // [{ taskId, title, type, size, block: "h" | "day", hours, label: "3시간" | "종일", reason: "plan" | "catchup" | "due" | "overdue" | "fallback" | "early", done, checked }]
 // 표시용: item.label, Planner.REASON_LABEL[reason] → "보충"
-// 14일 전체: Planner.plan({...}).days["2026-11-14"]
+// 전체 (오늘 ~ 마지막 마감, 최소 14일 · 최대 120일): Planner.plan({...}).days["2026-11-14"]
 ```
 
 Calendar 마감 → 계획된 할 일: `kind: "deadline"`으로 events에 저장하면 storage.js가 페이지 로드 시 자동으로 연결된 task를 만듦 (`SD.syncDeadlines()`). Calendar는 tasks에 쓰지 않음.
@@ -142,6 +142,8 @@ tasks 형식
 
 - 요일은 **설정의 "내 일주일"** (`settings.week`: `off` 쉼 / `short` 짧게 / `long` 길게)이 결정. 종일은 마감·시험에 가장 가까운 길게 요일.
 - **쉬는 날** (`settings.restDays` + 메모 `settings.restNotes`): 특정 날짜는 아무것도 계획하지 않음. Planner 페이지의 '쉬는 날' 카드, 주간 계획의 '쉬기' 버튼으로 설정. 매주 반복 패턴은 '내 일주일'.
+- **계획 범위:** 오늘부터 가장 늦은 마감까지 (최소 14일, 최대 120일). 그래서 달력에서 3~4주 뒤 시험 전날까지 공부가 보임.
+- **다른 시험이 있는 날:** 종일로 잡지 않고, 짧게 날 한도까지만 공부.
 - 하루 한도: 짧게 날 `settings.shortDayHours` (기본 4시간), 종일 = `settings.longDayHours` (기본 8시간). 넘치면 앞날로 나눠 배치, 그래도 안 되면 경고.
 - **시험은 하나씩:** 앞 시험이 끝나기 전엔 다음 시험 공부를 시작하지 않음. 남은 날이 적으면 같은 총 시간을 그 날들에 몰아서 배치하고, 그래도 안 들어가면 앞 시험 전 날에 일부 배치.
 - **여유 있으면 미리 시작:** 시험 공부 기간 전에 이틀에 한 번 1시간 "미리" 세션 (작업량 3: 7일, 4: 14일, 5: 21일 전부터). 빈 시간에만 들어가고, 건너뛰어도 보충 없음. 해 두면 마지막 날들 시간이 줄어듦. 설정 `settings.startEarly`, 할 일별 `plan.early`.

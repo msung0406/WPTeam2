@@ -11,7 +11,8 @@ const Planner = (() => {
   'use strict';
 
   const D = SD.date;
-  const HORIZON = 14; // days planned ahead (today included)
+  const HORIZON = 14;      // minimum days planned ahead (today included)
+  const MAX_HORIZON = 120; // plan reaches the latest open due date, up to this many days
 
   /* ---------- defaults per size (each task can override any field in 세부 조정) ----------
      SPREAD — assignments, projects, general tasks: sessions spread out before the due date
@@ -53,15 +54,18 @@ const Planner = (() => {
   }
 
   /* ---------- settings → helpers ---------- */
-  function context(settings = DEFAULT_SETTINGS, events = []) {
+  // examDays: dates of open exams — never a 종일 day for anything (the exam takes part of that day)
+  function context(settings = DEFAULT_SETTINGS, events = [], examDays = []) {
     const s = { ...DEFAULT_SETTINGS, ...settings };
     const rest = new Set(s.restDays);
-    const busy = new Set(events.filter(e => e.kind === 'schedule').map(e => e.date));
+    const exams = new Set(examDays);
+    const busy = new Set([...events.filter(e => e.kind === 'schedule').map(e => e.date), ...examDays]);
     const avail = d => (rest.has(d) ? 'off' : s.week[D.dow(d)]);
     return {
       s, avail,
       canLong: d => !rest.has(d) && !busy.has(d) && s.week[D.dow(d)] === 'long',
-      cap: d => ({ off: 0, short: s.shortDayHours, long: s.longDayHours })[avail(d)]   // study hours available that day
+      // study hours available that day (an exam day is at most a 짧게 day)
+      cap: d => Math.min(({ off: 0, short: s.shortDayHours, long: s.longDayHours })[avail(d)], exams.has(d) ? s.shortDayHours : Infinity)
     };
   }
 
@@ -224,8 +228,17 @@ const Planner = (() => {
   }
 
   /* ---------- 3. place everyone's sessions, within each day's hours ---------- */
-  function plan({ tasks, events = [], settings = DEFAULT_SETTINGS, today = D.today(), horizon = HORIZON }) {
-    const ctx = context(settings, events);
+  const openExamDays = (tasks, exceptId = null) =>
+    tasks.filter(t => t.planned !== false && t.type === 'exam' && !t.completed && !t.archived && t.id !== exceptId).map(t => t.date);
+
+  // horizon: days planned from today. Default = up to the latest open due date (at least 14), so the
+  // Calendar shows sessions for every upcoming deadline, not just the next two weeks.
+  function plan({ tasks, events = [], settings = DEFAULT_SETTINGS, today = D.today(), horizon = null }) {
+    const ctx = context(settings, events, openExamDays(tasks));
+    if (horizon === null) {
+      const lastDue = tasks.filter(t => t.planned !== false && !t.archived && !t.completed && t.date > today).map(t => t.date).sort().pop();
+      horizon = Math.min(MAX_HORIZON, Math.max(HORIZON, lastDue ? D.diff(lastDue, today) + 1 : 0));
+    }
     const horizonEnd = D.addDays(today, horizon - 1);
 
     const days = {};
@@ -324,7 +337,7 @@ const Planner = (() => {
 
   /* ---------- for the form ---------- */
   function preview(task, settings, events, allTasks = []) {
-    const ctx = context(settings, events);
+    const ctx = context(settings, events, openExamDays(allTasks, task.id));
     const factor = task.type === 'exam' ? subjectFactor(allTasks, task.subject, ctx, task.id) : null;
     const p = params(task, factor || 1);
     const boundary = task.type === 'exam' && task.date ? examBoundary(allTasks.filter(t => t.id !== task.id), task, D.today()) : null;

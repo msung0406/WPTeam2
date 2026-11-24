@@ -187,7 +187,7 @@ test('exam 3 weeks away → 1h 미리 review every other free day before the ram
   const { P } = boot();
   const r = P.plan({ tasks: [task({ id: 1, type: 'exam', size: 4, date: '2026-11-30' })], settings: S, today: MON });
   const e = early(r, 1);
-  assert.deepStrictEqual(e, ['11-12', '11-14', '11-16', '11-18', '11-20', '11-22']);
+  assert.deepStrictEqual(e, ['11-12', '11-14', '11-16', '11-18', '11-20', '11-22', '11-24']);
   Object.values(r.days).flat().filter(i => i.reason === 'early').forEach(i => assert.strictEqual(i.hours, 1));
 });
 test('미리 off in settings → no early sessions', () => {
@@ -401,6 +401,23 @@ test('export / import carries classes', () => {
   const a = boot(); a.SD.addSubject('네트워크');
   const b = boot(); assert.ok(b.SD.importAll(JSON.parse(JSON.stringify(a.SD.exportAll()))).ok);
   assert.strictEqual(JSON.stringify(b.SD.getSubjects()), JSON.stringify(['네트워크']));
+});
+/* ---------------- horizon + exam days ---------------- */
+test('plan reaches the latest due date (not just 14 days): finals 3–4 weeks out get their days', () => {
+  const { P } = boot();
+  const fin = task({ id: 1, type: 'exam', size: 4, date: '2026-12-09', createdAt: MON });
+  const r = P.plan({ tasks: [fin], settings: S, today: MON });
+  assert.ok(r.days['2026-12-08'] && r.days['2026-12-08'].some(i => i.taskId === 1), 'day before the exam is planned');
+  assert.strictEqual(Object.keys(P.plan({ tasks: [fin], settings: S, today: MON, horizon: 14 }).days).length, 14);
+});
+test("another exam's day: never 종일, at most a 짧게 day", () => {
+  const { P } = boot();
+  const sat = task({ id: 1, type: 'exam', size: 2, date: '2026-11-14', createdAt: MON });   // exam on Saturday (길게)
+  const next = task({ id: 2, type: 'exam', size: 4, date: '2026-11-17', createdAt: MON });
+  const r = P.plan({ tasks: [sat, next], settings: S, today: MON });
+  const onSat = r.days['2026-11-14'];
+  assert.ok(!onSat.some(i => i.block === 'day'));
+  assert.ok(onSat.reduce((h, i) => h + i.hours, 0) <= S.shortDayHours);
 });
 test('ids unique', () => {
   const { SD } = boot(); const s = new Set(); for (let i = 0; i < 1000; i++) s.add(SD.newId()); assert.strictEqual(s.size, 1000);
