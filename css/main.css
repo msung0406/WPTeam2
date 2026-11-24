@@ -3,20 +3,18 @@
    ========================================================= */
 #todayList:empty { display: none; }
 
-/* header: text left · big date top right (same spot as other pages) · button under it
-   phone: big date on its own line first, then the text, then the button */
-.sd-dash-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem 1.5rem; align-items: start; }
-.sd-dash-text { grid-column: 1; grid-row: 1 / span 2; align-self: end; }
-.sd-dash-header .sd-today { grid-column: 2; grid-row: 1; justify-self: end; text-align: right; line-height: 1.15; }
-.sd-dash-header .sd-today-pre { display: block; font-size: .8rem; font-weight: 600; letter-spacing: .06em; color: var(--sd-accent-text); }
-.sd-dash-header .sd-today-sep { display: none; }
-.sd-dash-header .sd-today-date { display: block; font-size: clamp(1.5rem, 1rem + 1.6vw, 2.25rem); font-weight: 700; letter-spacing: -.02em; color: var(--sd-ink); }
-.sd-dash-cta { grid-column: 2; grid-row: 2; justify-self: end; align-self: end; }
-@media (max-width: 575.98px) {
-  .sd-dash-header .sd-today { grid-column: 1 / -1; grid-row: 1; justify-self: start; text-align: left; white-space: normal; }
-  .sd-dash-text { grid-row: 2; }
-  .sd-dash-cta { grid-column: 1 / -1; grid-row: 3; justify-self: start; }
+/* header: greeting + highlighted date on the left · button on the right (under the text on phones) */
+.sd-dash-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; }
+.sd-dash-title { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; }
+.sd-dash-header .sd-today {
+  display: inline-flex; align-items: baseline; gap: .4rem;
+  padding: .3rem .85rem; border-radius: 999px;
+  background: var(--sd-accent-soft); color: var(--sd-accent-text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-accent-text) 35%, transparent);
+  font-size: clamp(1.05rem, .9rem + .6vw, 1.35rem); font-weight: 700; letter-spacing: -.01em; line-height: 1.3;
 }
+.sd-dash-header .sd-today-pre { font-size: .72em; font-weight: 600; opacity: .85; }
+.sd-dash-header .sd-today-sep { display: none; }
+
 
 /* ---------- Timer heatmap (js/heatmap.js) ---------- */
 .sd-heat, .sd-heat-legend {
